@@ -1,4 +1,4 @@
-import { Itour, ItourType } from "./tour.interface";
+import { Itour, ItourType } from "./blogs.interface";
 import { Tour, TourType } from "./tour.mode";
 
 const createTour = async (payload: Itour) => {
@@ -33,7 +33,9 @@ const getSingleTour = async (slug: string) => {
 };
 
 const createTourTypes = async (payload: ItourType) => {
-  const existingTourType = await TourType.findOne({ where: { name: payload.name } });
+  const existingTourType = await TourType.findOne({
+    where: { name: payload.name },
+  });
   if (existingTourType) {
     throw new Error("Tour type with this name already exists");
   }

@@ -1,17 +1,19 @@
 import { model, Schema } from "mongoose";
-import { Itour, ItourType } from "./tour.interface";
+import { Itour, ItourType } from "./blogs.interface";
 
-const tourTypeSchema = new Schema<ItourType>({
-  name: {
-    type: String,
-    required: true,
-    unique: true,
+const tourTypeSchema = new Schema<ItourType>(
+  {
+    name: {
+      type: String,
+      required: true,
+      unique: true,
+    },
   },
-},{
-  timestamps: true,
-  versionKey: false,
-});
-
+  {
+    timestamps: true,
+    versionKey: false,
+  }
+);
 
 const TourType = model<ItourType>("TourType", tourTypeSchema);
 
@@ -109,7 +111,7 @@ const tourSchema = new Schema<Itour>(
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
 
 export const Tour = model<Itour>("Tour", tourSchema);
