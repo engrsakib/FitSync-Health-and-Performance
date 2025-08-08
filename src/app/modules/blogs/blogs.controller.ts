@@ -40,7 +40,31 @@ const getSingleBlog = async (req: Request, res: Response) => {
   }
 };
 
+const updateBlog = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const updatedBlog = await BlogService.updateBlogs(id, req.body);
+    res.status(200).json({
+      message: "Blog updated successfully",
+      data: updatedBlog,
+    });
+  } catch (error) {
+    throw new AppError(`Failed to update blog: ${error}`, 500);
+  }
+};
 
+
+const deleteBlog = async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    await BlogService.deleteBlogs(id);
+    res.status(204).json({
+      message: "Blog deleted successfully",
+    });
+  } catch (error) {
+    throw new AppError(`Failed to delete blog: ${error}`, 500);
+  }
+};
 
 export const BlogController = {
   createBlog,
