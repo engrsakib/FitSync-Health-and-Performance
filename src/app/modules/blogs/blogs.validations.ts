@@ -8,7 +8,7 @@ export const BlogStatusEnum = z.nativeEnum(BlogStatus);
 
 export const createBlogZodSchema = z.object({
   title: z.string(),
-  slug: z.string(),
+  slug: z.string().optional(),
   thumbnail: z.string().optional(),
   bannerImage: z.string().optional(),
   content: z.string(),
@@ -17,8 +17,8 @@ export const createBlogZodSchema = z.object({
   category: BlogCategoryEnum,
   author: z.string(),
   readTime: z.number().optional(),
-  publishedAt: z.string().datetime(),
-  updatedAt: z.string().datetime(),
+  publishedAt: z.string().datetime().optional(),
+  updatedAt: z.string().datetime().optional(),
   isPublished: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
   views: z.number().optional(),
