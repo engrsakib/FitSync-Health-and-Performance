@@ -19,6 +19,16 @@ const createBlog = async (payload: Iblog) => {
   return blog;
 };
 
+const updateBlogs = async (id: string, payload: Partial<Iblog>) => {
+  const blog = await Blogs.findById(id);
+  if (!blog) {
+    throw new Error("Blog not found");
+  }
+
+  await Blogs.findByIdAndUpdate(id, payload, { new: true });
+  return Blogs.findById(id);
+};
+
 const getAllBlogs = async () => {
   const blogs = await Blogs.find();
   return blogs;
@@ -46,4 +56,5 @@ export const BlogService = {
   getAllBlogs,
   getSingleBlog,
   deleteBlogs,
+  updateBlogs,
 };
