@@ -1,60 +1,51 @@
 import { Request, Response } from "express";
 import AppError from "../../errorHelpers/appError";
-import { TourService } from "./blogs.service";
+import { BlogService } from "./blogs.service";
 
 
-const createTour = async (req: Request, res: Response) => {
+const createBlog = async (req: Request, res: Response) => {
   try {
-    const newTour = await TourService.createTour(req.body);
+    const newBlog = await BlogService.createBlog(req.body);
     res.status(201).json({
-      message: "Tour created successfully",
-      tour: newTour,
+      message: "Blog created successfully",
+      blog: newBlog,
     });
   } catch (error) {
-    throw new AppError(`Failed to create tour: ${error}`, 500);
+    throw new AppError(`Failed to create blog: ${error}`, 500);
   }
 };
 
-const getAllTours = async (req: Request, res: Response) => {
+const getAllBlogs = async (req: Request, res: Response) => {
   try {
-    const tours = await TourService.getAllTours();
+    const blogs = await BlogService.getAllBlogs();
     res.status(200).json({
-      message: "Tours retrieved successfully",
-      data:tours,
+      message: "Blogs retrieved successfully",
+      data: blogs,
     });
   } catch (error) {
-    throw new AppError(`Failed to retrieve tours: ${error}`, 500);
+    throw new AppError(`Failed to retrieve blogs: ${error}`, 500);
   }
 };
 
-const getSingleTour = async (req: Request, res: Response) => {
+const getSingleBlog = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const tour = await TourService.getSingleTour(slug);
+    const blog = await BlogService.getSingleBlog(slug);
     res.status(200).json({
-      message: "Tour retrieved successfully",
-      data: tour,
+      message: "Blog retrieved successfully",
+      data: blog,
     });
   } catch (error) {
-    throw new AppError(`Failed to retrieve tour: ${error}`, 500);
+    throw new AppError(`Failed to retrieve blog: ${error}`, 500);
   }
 };
 
-const createTourTypes = async (req: Request, res: Response) => {
-  try {
-    const newTourType = await TourService.createTourTypes(req.body);
-    res.status(201).json({
-      message: "Tour type created successfully",
-      tourType: newTourType,
-    });
-  } catch (error) {
-    throw new AppError(`Failed to create tour type: ${error}`, 500);
-  }
-};
 
-export const TourController = {
-  createTour,
-  getAllTours,
-  getSingleTour,
-  createTourTypes,
+
+export const BlogController = {
+  createBlog,
+  getAllBlogs,
+  getSingleBlog,
+  updateBlog,
+  deleteBlog,
 };
