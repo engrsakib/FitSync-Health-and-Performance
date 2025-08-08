@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { TourController } from "./tour.controller";
+import { TourController } from "./blogs.controller";
 import { verifyToken } from "../../util/verifyToken";
 import { role } from "../user/user.interface";
 import { validateRequest } from "../../middleware/validateRequest";
