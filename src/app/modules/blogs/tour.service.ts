@@ -1,5 +1,5 @@
 import { Itour, ItourType } from "./blogs.interface";
-import { Tour, TourType } from "./tour.mode";
+import { Tour, TourType } from "./blogs.mode";
 
 const createTour = async (payload: Itour) => {
   const BaseSlug = payload.name.toLowerCase().split(" ").join("-");
