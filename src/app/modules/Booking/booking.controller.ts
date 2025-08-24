@@ -1,36 +1,38 @@
 import { Request, Response } from "express";
 import AppError from "../../errorHelpers/appError";
 import  httpStatus  from "http-status-codes";
+import { BookingService } from "./booking.service";
+import { ScheduleService } from "../scheduling/scheduling.service";
 
 
 const createScheduling = async (req: Request, res: Response) => {
   try {
-    const newScheduling = await ScheduleService.createSchedule(req.body);
-    res.status(201).json({
+    const newScheduling = await BookingService.createBooking(req.body);
+    res.status(httpStatus.CREATED).json({
       message: "Scheduling created successfully",
       scheduling: newScheduling,
     });
   } catch (error) {
-    throw new AppError(`Failed to create scheduling: ${error}`, 500);
+    throw new AppError(`Failed to create scheduling: ${error}`, httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 const getAllSchedulings = async (req: Request, res: Response) => {
   try {
     const schedulings = await ScheduleService.getAllSchedules();
-    res.status(200).json({
+    res.status(httpStatus.OK).json({
       message: "Schedulings retrieved successfully",
       data: schedulings,
     });
   } catch (error) {
-    throw new AppError(`Failed to retrieve schedulings: ${error}`, 500);
+    throw new AppError(`Failed to retrieve schedulings: ${error}`, httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
 const getSingleScheduling = async (req: Request, res: Response) => {
   try {
-    const { slug } = req.params;
-    const scheduling = await ScheduleService.getSingleSchedule(slug);
+    const { id } = req.params;
+    const scheduling = await ScheduleService.getSingleSchedule(id);
     res.status(200).json({
       message: "Scheduling retrieved successfully",
       data: scheduling,
@@ -40,29 +42,17 @@ const getSingleScheduling = async (req: Request, res: Response) => {
   }
 };
 
-const updateScheduling = async (req: Request, res: Response) => {
-  try {
-    const { id } = req.params;
-    const updatedScheduling = await ScheduleService.updateSchedule(id, req.body);
-    res.status(httpStatus.OK).json({
-      message: "Scheduling updated successfully",
-      data: updatedScheduling,
-    });
-  } catch (error) {
-    throw new AppError(`Failed to update scheduling: ${error}`, 500);
-  }
-};
 
 
-const deleteScheduling = async (req: Request, res: Response) => {
+const cancelScheduling = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await ScheduleService.deleteSchedules(id);
-    res.status(204).json({
+    await BookingService.cancelBookings(id);
+    res.status(httpStatus.NO_CONTENT).json({
       message: "Scheduling deleted successfully",
     });
   } catch (error) {
-    throw new AppError(`Failed to delete scheduling: ${error}`, 500);
+    throw new AppError(`Failed to delete scheduling: ${error}`, httpStatus.INTERNAL_SERVER_ERROR);
   }
 };
 
@@ -70,6 +60,5 @@ export const SchedulingController = {
   createScheduling,
   getAllSchedulings,
   getSingleScheduling,
-  updateScheduling,
-  deleteScheduling,
+  cancelScheduling,
 };

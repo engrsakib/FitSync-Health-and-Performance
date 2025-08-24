@@ -63,8 +63,8 @@ const getAllBookings = async () => {
   return bookings;
 };
 
-const getSingleBooking = async (slug: string) => {
-  const booking = await Booking.findOne({ where: { slug } });
+const getSingleBooking = async (id: string) => {
+  const booking = await Booking.findOne({ where: { id } });
   if (!booking) {
     throw new Error("Booking not found");
   }
