@@ -1,6 +1,6 @@
 import { Types } from "mongoose";
 
-export enum Role {
+export enum role {
   TRAINER = "TRAINER",
   ADMIN = "ADMIN",
   TRAINEE = "TRAINEE",
@@ -26,7 +26,7 @@ export interface IUser {
   phone?: string;
   picture?: string;
   address?: string;
-  role: Role;
+  role: role;
   isDeleted?: boolean;
   isActive?: IsActive;
   isVerified?: boolean;

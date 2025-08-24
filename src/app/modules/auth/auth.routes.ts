@@ -8,5 +8,5 @@ const router = Router();
 router.post("/login", AuthController.credentialsLogin);
 router.post("/refresh-token", AuthController.getNewAccessToken);
 router.post("/logout", AuthController.logout); // Assuming logout is handled similarly to login
-router.post("/reset-password",verifyToken(role.ADMIN, role.USER, role.SUPER_ADMIN, role.GUIDE) , AuthController.resetPassword); // Add forgot password route if needed
+router.post("/reset-password",verifyToken(role.ADMIN, role.TRAINEE, role.TRAINER) , AuthController.resetPassword); // Add forgot password route if needed
 export const AuthRoutes = router;

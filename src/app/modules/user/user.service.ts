@@ -1,5 +1,5 @@
 import { JwtPayload } from "jsonwebtoken";
-import { isActive, IUser, role } from "./user.interface";
+import { IsActive, IUser, role } from "./user.interface";
 import { User } from "./user.model";
 import bcrypt from "bcryptjs";
 import AppError from "../../errorHelpers/appError";
@@ -16,7 +16,10 @@ const createUser = async (payload: Partial<IUser>) => {
     throw new Error("User with this email already exists");
   }
 
-  const hashedPassword = await bcrypt.hash(password as string, Number(process.env.BCRYPT_SALT_ROUNDS) || 10);
+  const hashedPassword = await bcrypt.hash(
+    password as string,
+    Number(process.env.BCRYPT_SALT_ROUNDS) || 10,
+  );
 
   const user = new User({ ...userData, password: hashedPassword });
   const newUser = await User.create(user);
@@ -33,7 +36,7 @@ const updateUser = async (
   if (!isUserExists) {
     throw new AppError("User not found", httpStatus.NOT_FOUND);
   }
-  if (isUserExists.isDeleted || isUserExists.isActive === isActive.BLOCKED) {
+  if (isUserExists.isDeleted || isUserExists.isActive === IsActive.BLOCKED) {
     if (!decodedToken || !decodedToken.role) {
       throw new AppError("Unauthorized access", httpStatus.UNAUTHORIZED);
     }
@@ -46,25 +49,25 @@ const updateUser = async (
     );
   }
   if (payload.role) {
-    if (decodedToken.role !== role.USER && decodedToken.role !== role.GUIDE) {
+    if (
+      decodedToken.role !== role.ADMIN &&
+      decodedToken.role !== role.TRAINER
+    ) {
       throw new AppError(
         "You do not have permission to update user roles",
         httpStatus.FORBIDDEN,
       );
     }
-    if (payload.role === role.SUPER_ADMIN || payload.role === role.ADMIN) {
+    if (payload.role === role.ADMIN) {
       throw new AppError(
         "Cannot update user role to SUPERADMIN",
         httpStatus.FORBIDDEN,
       );
-    } 
+    }
   }
 
-  if (payload.isActive || payload.isDeleted || payload.isVarified) {
-    if (
-      decodedToken.role !== role.SUPER_ADMIN &&
-      decodedToken.role !== role.ADMIN
-    ) {
+  if (payload.isActive || payload.isDeleted || payload.isVerified) {
+    if (decodedToken.role !== role.ADMIN) {
       throw new AppError(
         "Only SUPERADMIN can update user active or deleted status",
         httpStatus.FORBIDDEN,
