@@ -1,5 +1,6 @@
 import { calculateEndTime } from "../../util/schedule.utils";
 import { Schedule } from "../scheduling/scheduling.mode";
+import { User } from "../user/user.model";
 import { IBooking } from "./booking.interface";
 import { Booking } from "./booking.model";
 
@@ -11,48 +12,41 @@ export const createBooking = async (payload: IBooking) => {
     throw new Error("Schedule not found.");
   }
 
-  // ২. Check duplicate booking for same trainee & schedule
+  // ২. Check if user already booked this schedule (trainee can't book twice)
+  // Check in Booking collection
   const existingBooking = await Booking.findOne({
     schedule: payload.schedule,
     trainee: payload.trainee,
   });
   if (existingBooking) {
-    throw new Error("Trainee already booked this schedule.");
+    throw new Error("You have already booked this schedule.");
   }
 
-  // ৩. Check maxTrainees limit for the schedule
-  const bookingCount = await Booking.countDocuments({
-    schedule: payload.schedule,
-    status: { $ne: "cancelled" }, // Exclude cancelled
-  });
-
+  // ৩. Check if schedule is full (max 10 trainees)
+  // Use schedule.trainees array length
   const maxTrainees = schedule.maxTrainees ?? 10;
-  if (bookingCount >= maxTrainees) {
-    throw new Error("Schedule is full. No more bookings allowed.");
+  const currentTrainees = schedule.trainees?.length ?? 0;
+  if (currentTrainees >= maxTrainees) {
+    throw new Error("The schedule is full. No more bookings allowed.");
   }
 
-  // ৪. (Optional) Check total bookings for the day for this schedule (limit 5 per day)
-  // If you want to enforce: any schedule can be booked max 5 times per day
-  const startOfDay = new Date(payload.bookingDate);
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(payload.bookingDate);
-  endOfDay.setHours(23, 59, 59, 999);
-
-  const dailyBookingCount = await Booking.countDocuments({
-    schedule: payload.schedule,
-    bookingDate: {
-      $gte: startOfDay,
-      $lte: endOfDay,
-    },
-    status: { $ne: "cancelled" },
-  });
-
-  if (dailyBookingCount >= 5) {
-    throw new Error("Booking limit exceeded: Maximum 5 bookings allowed per schedule per day.");
-  }
-
-  // ৫. Create booking
+  // ৪. Create booking
   const booking = await Booking.create(payload);
+
+  // ৫. Update User: push booking._id into user's bookings array
+  await User.findByIdAndUpdate(
+    payload.trainee,
+    { $push: { bookings: booking._id } },
+    { new: true },
+  );
+
+  // ৬. Update Schedule: push trainee._id into schedule.trainees array
+  await Schedule.findByIdAndUpdate(
+    payload.schedule,
+    { $push: { trainees: payload.trainee } },
+    { new: true },
+  );
+
   return booking;
 };
 
