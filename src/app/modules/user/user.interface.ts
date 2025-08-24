@@ -1,22 +1,21 @@
 import { Types } from "mongoose";
 
-export enum role{
-    USER = "USER",
-    ADMIN = "ADMIN",
-    GUIDE = "GUIDE",
-    SUPER_ADMIN = "SUPER_ADMIN",
+export enum Role {
+  TRAINER = "TRAINER",
+  ADMIN = "ADMIN",
+  TRAINEE = "TRAINEE",
+}
+
+export enum IsActive {
+  ACTIVE = "ACTIVE",
+  INACTIVE = "INACTIVE",
+  BLOCKED = "BLOCKED",
+  DELETED = "DELETED",
 }
 
 export interface IAuth {
   provider: string;
   providerId: string;
-}
-
-export enum isActive{
-    ACTIVE = "ACTIVE",
-    INACTIVE = "INACTIVE",
-    BLOCKED = "BLOCKED",
-    DELETED = "DELETED",
 }
 
 export interface IUser {
@@ -27,11 +26,11 @@ export interface IUser {
   phone?: string;
   picture?: string;
   address?: string;
-  role: role;
-  isDeleted ?: boolean;
-  isActive ?: isActive;
-  isVarified ?: boolean;
+  role: Role;
+  isDeleted?: boolean;
+  isActive?: IsActive;
+  isVerified?: boolean;
   auth: IAuth[];
-  booking ?: Types.ObjectId[];
-  guide ?: Types.ObjectId;
+  bookings?: Types.ObjectId[];    // Changed to plural for semantic clarity
+  trainerGuide?: Types.ObjectId;  // Renamed for clarity (if this means a trainer's guide/mentor)
 }

@@ -1,5 +1,5 @@
-import { model, Schema } from "mongoose";
-import { isActive, IUser, role } from "./user.interface";
+import { model, Schema, Types } from "mongoose";
+import { IsActive, IUser, Role } from "./user.interface";
 
 const userSchema = new Schema<IUser>(
   {
@@ -11,25 +11,25 @@ const userSchema = new Schema<IUser>(
     address: { type: String, default: null },
     role: {
       type: String,
-      enum: Object.values(role),
-      default: role.USER,
+      enum: Object.values(Role),
+      default: Role.TRAINEE,
       required: true,
     },
     isDeleted: { type: Boolean, default: false },
     isActive: {
       type: String,
-      enum: Object.values(isActive),
-      default: isActive.ACTIVE,
+      enum: Object.values(IsActive),
+      default: IsActive.ACTIVE,
     },
-    isVarified: { type: Boolean, default: false },
+    isVerified: { type: Boolean, default: false }, // spelling fixed!
     auth: [
       {
         provider: { type: String, required: true },
         providerId: { type: String, required: true },
       },
     ],
-    booking: [{ type: Schema.Types.ObjectId, ref: "Booking" }],
-    guide: { type: Schema.Types.ObjectId, ref: "Guide", default: null },
+    bookings: [{ type: Types.ObjectId, ref: "Booking" }], // pluralized for clarity
+    trainerGuide: { type: Types.ObjectId, ref: "Guide", default: null }, // renamed for clarity
   },
   {
     timestamps: true,
@@ -37,6 +37,5 @@ const userSchema = new Schema<IUser>(
     toJSON: { virtuals: true },
   },
 );
-
 
 export const User = model<IUser>("User", userSchema);
