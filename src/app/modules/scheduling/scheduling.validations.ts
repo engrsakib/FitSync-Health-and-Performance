@@ -1,54 +1,73 @@
-// blogs.validation.ts
 import { z } from "zod";
-import { BlogCategory, BlogStatus } from "./scheduling.interface";
+import { ScheduleStatus } from "./scheduling.interface";
 
-export const BlogCategoryEnum = z.nativeEnum(BlogCategory);
-export const BlogStatusEnum = z.nativeEnum(BlogStatus);
+// Native enum for ScheduleStatus
+export const ScheduleStatusEnum = z.nativeEnum(ScheduleStatus);
 
-export const createBlogZodSchema = z.object({
-  title: z.string(),
-  slug: z.string().optional(),
-  thumbnail: z.string().optional(),
-  bannerImage: z.string().optional(),
-  content: z.string(),
-  tags: z.array(z.string()).optional(),
-  status: BlogStatusEnum.optional(),
-  category: BlogCategoryEnum,
-  author: z.string(),
-  readTime: z.number().optional(),
-  publishedAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
-  isPublished: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  views: z.number().optional(),
-  likes: z.number().optional(),
-  commentsCount: z.number().optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
+export const createScheduleZodSchema = z.object({
+  title: z
+    .string({ invalid_type_error: "Title must be a string." })
+    .min(2, { message: "Title must be at least 2 characters." })
+    .max(100, { message: "Title cannot exceed 100 characters." }),
+  description: z
+    .string({ invalid_type_error: "Description must be a string." })
+    .max(500, { message: "Description cannot exceed 500 characters." })
+    .optional(),
+  trainer: z
+    .string({ invalid_type_error: "Trainer ID must be a string." })
+    .min(10, { message: "Trainer ID must be at least 10 characters." }),
+  trainees: z
+    .array(z.string().min(10, "Trainee ID must be at least 10 characters."))
+    .max(10, { message: "Maximum 10 trainees allowed per schedule." })
+    .optional(),
+  classDate: z.coerce.date({ invalid_type_error: "classDate must be a valid date." }),
+  startTime: z
+    .string({ invalid_type_error: "startTime must be a string." })
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+      message: "startTime must be in HH:mm 24hr format.",
+    }),
+  endTime: z
+    .string({ invalid_type_error: "endTime must be a string." })
+    .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, {
+      message: "endTime must be in HH:mm 24hr format.",
+    }),
+  status: ScheduleStatusEnum.optional(),
+  maxTrainees: z
+    .number()
+    .int()
+    .min(1)
+    .max(10)
+    .optional(),
+  isFull: z.boolean().optional(),
+  createdBy: z
+    .string({ invalid_type_error: "Admin ID (createdBy) must be a string." })
+    .min(10, { message: "Admin ID must be at least 10 characters." }),
+  isCancelled: z.boolean().optional(),
+  isCompleted: z.boolean().optional(),
+  notes: z.string().max(500).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
 });
 
-export const updateBlogZodSchema = z.object({
-  title: z.string().optional(),
-  slug: z.string().optional(),
-  thumbnail: z.string().optional(),
-  bannerImage: z.string().optional(),
-  content: z.string().optional(),
-  tags: z.array(z.string()).optional(),
-  status: BlogStatusEnum.optional(),
-  category: BlogCategoryEnum.optional(),
-  author: z.string().optional(),
-  readTime: z.number().optional(),
-  publishedAt: z.string().datetime().optional(),
-  updatedAt: z.string().datetime().optional(),
-  isPublished: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  views: z.number().optional(),
-  likes: z.number().optional(),
-  commentsCount: z.number().optional(),
-  seoTitle: z.string().optional(),
-  seoDescription: z.string().optional(),
+export const updateScheduleZodSchema = z.object({
+  title: z.string().min(2).max(100).optional(),
+  description: z.string().max(500).optional(),
+  trainer: z.string().min(10).optional(),
+  trainees: z.array(z.string().min(10)).max(10).optional(),
+  classDate: z.coerce.date().optional(),
+  startTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
+  endTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/).optional(),
+  status: ScheduleStatusEnum.optional(),
+  maxTrainees: z.number().int().min(1).max(10).optional(),
+  isFull: z.boolean().optional(),
+  createdBy: z.string().min(10).optional(),
+  isCancelled: z.boolean().optional(),
+  isCompleted: z.boolean().optional(),
+  notes: z.string().max(500).optional(),
+  createdAt: z.coerce.date().optional(),
+  updatedAt: z.coerce.date().optional(),
 });
 
 // Optional inferred types
-export type CreateBlogInput = z.infer<typeof createBlogZodSchema>;
-export type UpdateBlogInput = z.infer<typeof updateBlogZodSchema>;
+export type CreateScheduleInput = z.infer<typeof createScheduleZodSchema>;
+export type UpdateScheduleInput = z.infer<typeof updateScheduleZodSchema>;
