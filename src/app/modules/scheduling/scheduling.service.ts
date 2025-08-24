@@ -1,59 +1,60 @@
+import { ISchedule } from "./scheduling.interface";
 import { Schedule } from "./scheduling.mode";
 
 
-const createBlog = async (payload: Iblog) => {
+const createSchedule = async (payload: ISchedule) => {
   const BaseSlug = payload.title.toLowerCase().split(" ").join("-");
   let slug = `${BaseSlug}-division`;
-  const existingBlog = await Schedule.findOne({ where: { title: payload.title } });
-  if (existingBlog) {
-    throw new Error("Blog with this slug already exists");
+  const existingSchedule = await Schedule.findOne({ where: { title: payload.title } });
+  if (existingSchedule) {
+    throw new Error("Schedule with this slug already exists");
   }
   let count = 0;
   while (await Schedule.exists({ slug })) {
     count++;
-    slug = `${BaseSlug}-blog-${count}`;
+    slug = `${BaseSlug}-schedule-${count}`;
   }
   payload.slug = slug;
-  const blog = Schedule.create(payload);
-  return blog;
+  const schedule = Schedule.create(payload);
+  return schedule;
 };
 
-const updateBlogs = async (id: string, payload: Partial<Iblog>) => {
-  const blog = await Schedule.findById(id);
-  if (!blog) {
-    throw new Error("Blog not found");
+const updateSchedules = async (id: string, payload: Partial<ISchedule>) => {
+  const schedule = await Schedule.findById(id);
+  if (!schedule) {
+    throw new Error("Schedule not found");
   }
 
   await Schedule.findByIdAndUpdate(id, payload, { new: true });
   return Schedule.findById(id);
 };
 
-const getAllBlogs = async () => {
-  const blogs = await Schedule.find();
-  return blogs;
+const getAllSchedules = async () => {
+  const schedules = await Schedule.find();
+  return schedules;
 };
 
-const getSingleBlog = async (slug: string) => {
-  const blog = await Schedule.findOne({ where: { slug } });
-  if (!blog) {
-    throw new Error("Blog not found");
+const getSingleSchedule = async (slug: string) => {
+  const schedule = await Schedule.findOne({ where: { slug } });
+  if (!schedule) {
+    throw new Error("Schedule not found");
   }
-  return blog;
+  return schedule;
 };
 
-const deleteBlogs = async (id: string) => {
-  const blog = await Schedule.findOne({ where: { id } });
-  if (!blog) {
-    throw new Error("Blog not found");
+const deleteSchedules = async (id: string) => {
+  const schedule = await Schedule.findOne({ where: { id } });
+  if (!schedule) {
+    throw new Error("Schedule not found");
   }
   await Schedule.deleteOne({ where: { id } });
-  return blog;
+  return schedule;
 };
 
-export const BlogService = {
-  createBlog,
-  getAllBlogs,
-  getSingleBlog,
-  deleteBlogs,
-  updateBlogs,
+export const ScheduleService = {
+  createSchedule,
+  getAllSchedules,
+  getSingleSchedule,
+  deleteSchedules,
+  updateSchedules,
 };

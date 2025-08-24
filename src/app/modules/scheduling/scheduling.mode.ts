@@ -8,6 +8,12 @@ const scheduleSchema = new Schema<ISchedule>(
       required: true,
       trim: true,
     },
+    slug: {
+      type: String,
+      required: true,
+      unique: true,
+      trim: true,
+    },
     description: {
       type: String,
       default: null,

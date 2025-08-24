@@ -1,12 +1,12 @@
 import { Request, Response } from "express";
 import AppError from "../../errorHelpers/appError";
-import { BlogService } from "./scheduling.service";
+import {  ScheduleService } from "./scheduling.service";
 import  httpStatus  from "http-status-codes";
 
 
 const createScheduling = async (req: Request, res: Response) => {
   try {
-    const newScheduling = await BlogService.createBlog(req.body);
+    const newScheduling = await ScheduleService.createSchedule(req.body);
     res.status(201).json({
       message: "Scheduling created successfully",
       scheduling: newScheduling,
@@ -18,7 +18,7 @@ const createScheduling = async (req: Request, res: Response) => {
 
 const getAllSchedulings = async (req: Request, res: Response) => {
   try {
-    const schedulings = await BlogService.getAllBlogs();
+    const schedulings = await ScheduleService.getAllSchedules();
     res.status(200).json({
       message: "Schedulings retrieved successfully",
       data: schedulings,
@@ -31,7 +31,7 @@ const getAllSchedulings = async (req: Request, res: Response) => {
 const getSingleScheduling = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const scheduling = await BlogService.getSingleBlog(slug);
+    const scheduling = await ScheduleService.getSingleSchedule(slug);
     res.status(200).json({
       message: "Scheduling retrieved successfully",
       data: scheduling,
@@ -44,7 +44,7 @@ const getSingleScheduling = async (req: Request, res: Response) => {
 const updateScheduling = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updatedScheduling = await BlogService.updateBlogs(id, req.body);
+    const updatedScheduling = await ScheduleService.updateSchedules(id, req.body);
     res.status(httpStatus.OK).json({
       message: "Scheduling updated successfully",
       data: updatedScheduling,
@@ -58,7 +58,7 @@ const updateScheduling = async (req: Request, res: Response) => {
 const deleteScheduling = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    await BlogService.deleteBlogs(id);
+    await ScheduleService.deleteSchedules(id);
     res.status(204).json({
       message: "Scheduling deleted successfully",
     });

@@ -13,6 +13,10 @@ export const createScheduleZodSchema = z.object({
     .string({ invalid_type_error: "Description must be a string." })
     .max(500, { message: "Description cannot exceed 500 characters." })
     .optional(),
+  slug: z
+    .string({ invalid_type_error: "Slug must be a string." })
+    .min(2, { message: "Slug must be at least 2 characters." })
+    .max(100, { message: "Slug cannot exceed 100 characters." }),
   trainer: z
     .string({ invalid_type_error: "Trainer ID must be a string." })
     .min(10, { message: "Trainer ID must be at least 10 characters." }),

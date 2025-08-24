@@ -9,6 +9,7 @@ export enum ScheduleStatus {
 export interface ISchedule {
   id?: string;
   title: string;
+    slug?: string;
   description?: string;
   trainer: Types.ObjectId;        // Assigned trainer for the class
   trainees: Types.ObjectId[];     // List of trainees booked for this schedule
