@@ -22,7 +22,7 @@ const scheduleSchema = new Schema<ISchedule>(
     trainer: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true,
+      required: false,
     },
     trainees: [
       {

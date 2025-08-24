@@ -5,7 +5,7 @@ import { Schedule } from "./scheduling.mode";
 
 export const createSchedule = async (payload: ISchedule) => {
   const BaseSlug = payload.title.toLowerCase().split(" ").join("-");
-  let slug = `${BaseSlug}-division`;
+  let slug = `${BaseSlug}-schedule`;
 
   // নির্দিষ্ট তারিখে ৫টা শিডিউল আছে কিনা চেক
   const classDate = new Date(payload.classDate);
@@ -20,7 +20,7 @@ export const createSchedule = async (payload: ISchedule) => {
       $gte: startOfDay,
       $lte: endOfDay,
     },
-  });
+  }); 
 
   if (scheduleCount >= 5) {
     throw new Error("Schedule limit exceeded: Maximum 5 schedules allowed per day.");

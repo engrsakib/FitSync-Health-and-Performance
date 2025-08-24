@@ -16,10 +16,10 @@ export const createScheduleZodSchema = z.object({
   slug: z
     .string({ invalid_type_error: "Slug must be a string." })
     .min(2, { message: "Slug must be at least 2 characters." })
-    .max(100, { message: "Slug cannot exceed 100 characters." }),
+    .max(100, { message: "Slug cannot exceed 100 characters." }).optional(),
   trainer: z
     .string({ invalid_type_error: "Trainer ID must be a string." })
-    .min(10, { message: "Trainer ID must be at least 10 characters." }),
+    .min(10, { message: "Trainer ID must be at least 10 characters." }).optional(),
   trainees: z
     .array(z.string().min(10, "Trainee ID must be at least 10 characters."))
     .max(10, { message: "Maximum 10 trainees allowed per schedule." })
@@ -34,7 +34,7 @@ export const createScheduleZodSchema = z.object({
     .string({ invalid_type_error: "endTime must be a string." })
     .regex(/^([01]\d|2[0-3]):([0-5]\d)$/, {
       message: "endTime must be in HH:mm 24hr format.",
-    }),
+    }).optional(),
   status: ScheduleStatusEnum.optional(),
   maxTrainees: z
     .number()
