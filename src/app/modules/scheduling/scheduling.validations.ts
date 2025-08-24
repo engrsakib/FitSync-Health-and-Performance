@@ -1,7 +1,6 @@
 // blogs.validation.ts
 import { z } from "zod";
-import { BlogCategory, BlogStatus } from "./blogs.interface";
-
+import { BlogCategory, BlogStatus } from "./scheduling.interface";
 
 export const BlogCategoryEnum = z.nativeEnum(BlogCategory);
 export const BlogStatusEnum = z.nativeEnum(BlogStatus);

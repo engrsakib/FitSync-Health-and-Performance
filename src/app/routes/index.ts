@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { UserRoutes } from "../modules/user/user.routes";
 import { AuthRoutes } from "../modules/auth/auth.routes";
-import { BlogsRoutes } from "../modules/blogs/blogs.routes";
+import { BlogsRoutes } from "../modules/scheduling/scheduling.routes";
 
 
 export const router = Router();

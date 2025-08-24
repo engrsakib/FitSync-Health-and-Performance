@@ -1,6 +1,5 @@
-import { Iblog } from "./blogs.interface";
-import { Blogs } from "./blogs.mode";
-
+import { Iblog } from "./scheduling.interface";
+import { Blogs } from "./scheduling.mode";
 
 const createBlog = async (payload: Iblog) => {
   const BaseSlug = payload.title.toLowerCase().split(" ").join("-");

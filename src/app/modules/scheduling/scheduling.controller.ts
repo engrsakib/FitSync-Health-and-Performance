@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import AppError from "../../errorHelpers/appError";
-import { BlogService } from "./blogs.service";
+import { BlogService } from "./scheduling.service";
 import  httpStatus  from "http-status-codes";
 
 

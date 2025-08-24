@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import { Iblog, BlogStatus, BlogCategory } from "./blogs.interface";
+import { Iblog, BlogStatus, BlogCategory } from "./scheduling.interface";
 
 const blogsSchema = new Schema<Iblog>(
   {
@@ -91,7 +91,7 @@ const blogsSchema = new Schema<Iblog>(
   {
     timestamps: true,
     versionKey: false,
-  },
+  }
 );
 
 export const Blogs = model<Iblog>("Blogs", blogsSchema);
