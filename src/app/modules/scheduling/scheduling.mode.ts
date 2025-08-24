@@ -1,97 +1,89 @@
 import { Schema, model } from "mongoose";
-import { Iblog, BlogStatus, BlogCategory } from "./scheduling.interface";
+import { ISchedule, ScheduleStatus } from "./scheduling.interface";
 
-const blogsSchema = new Schema<Iblog>(
+const scheduleSchema = new Schema<ISchedule>(
   {
     title: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
     },
-    slug: {
+    description: {
       type: String,
-      required: true,
-      unique: true,
-      lowercase: true,
+      default: null,
       trim: true,
     },
-    thumbnail: {
-      type: String,
-      default: null,
-    },
-    bannerImage: {
-      type: String,
-      default: null,
-    },
-    content: {
-      type: String,
-      required: true,
-    },
-    tags: {
-      type: [String],
-      default: [],
-    },
-    status: {
-      type: String,
-      enum: Object.values(BlogStatus),
-      default: BlogStatus.DRAFT,
-    },
-    category: {
-      type: String,
-      enum: Object.values(BlogCategory),
-      required: true,
-    },
-    author: {
+    trainer: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    readTime: {
-      type: Number,
-      default: 0,
-    },
-    publishedAt: {
+    trainees: [
+      {
+        type: Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
+    classDate: {
       type: Date,
+      required: true,
+    },
+    startTime: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    endTime: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: Object.values(ScheduleStatus),
+      default: ScheduleStatus.SCHEDULED,
+    },
+    maxTrainees: {
+      type: Number,
+      default: 10,
+      min: 1,
+      max: 10,
+    },
+    isFull: {
+      type: Boolean,
+      default: false,
+    },
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    isCancelled: {
+      type: Boolean,
+      default: false,
+    },
+    isCompleted: {
+      type: Boolean,
+      default: false,
+    },
+    notes: {
+      type: String,
       default: null,
+      trim: true,
+    },
+    createdAt: {
+      type: Date,
+      default: Date.now,
     },
     updatedAt: {
       type: Date,
-      default: null,
-    },
-    isPublished: {
-      type: Boolean,
-      default: false,
-    },
-    isFeatured: {
-      type: Boolean,
-      default: false,
-    },
-    views: {
-      type: Number,
-      default: 0,
-    },
-    likes: {
-      type: Number,
-      default: 0,
-    },
-    commentsCount: {
-      type: Number,
-      default: 0,
-    },
-    seoTitle: {
-      type: String,
-      default: null,
-    },
-    seoDescription: {
-      type: String,
-      default: null,
+      default: Date.now,
     },
   },
   {
     timestamps: true,
     versionKey: false,
-  }
+  },
 );
 
-export const Blogs = model<Iblog>("Blogs", blogsSchema);
+export const Schedule = model<ISchedule>("Schedule", scheduleSchema);

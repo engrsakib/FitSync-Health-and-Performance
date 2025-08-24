@@ -19,7 +19,7 @@ const moduleRoutes = [
   },
   
   {
-    path: "/blogs",
+    path: "/scheduling",
     route: BlogsRoutes,
   },
 ];
