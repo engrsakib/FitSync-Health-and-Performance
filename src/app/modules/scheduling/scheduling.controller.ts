@@ -4,73 +4,73 @@ import { BlogService } from "./scheduling.service";
 import  httpStatus  from "http-status-codes";
 
 
-const createBlog = async (req: Request, res: Response) => {
+const createScheduling = async (req: Request, res: Response) => {
   try {
-    const newBlog = await BlogService.createBlog(req.body);
+    const newScheduling = await BlogService.createBlog(req.body);
     res.status(201).json({
-      message: "Blog created successfully",
-      blog: newBlog,
+      message: "Scheduling created successfully",
+      scheduling: newScheduling,
     });
   } catch (error) {
-    throw new AppError(`Failed to create blog: ${error}`, 500);
+    throw new AppError(`Failed to create scheduling: ${error}`, 500);
   }
 };
 
-const getAllBlogs = async (req: Request, res: Response) => {
+const getAllSchedulings = async (req: Request, res: Response) => {
   try {
-    const blogs = await BlogService.getAllBlogs();
+    const schedulings = await BlogService.getAllBlogs();
     res.status(200).json({
-      message: "Blogs retrieved successfully",
-      data: blogs,
+      message: "Schedulings retrieved successfully",
+      data: schedulings,
     });
   } catch (error) {
-    throw new AppError(`Failed to retrieve blogs: ${error}`, 500);
+    throw new AppError(`Failed to retrieve schedulings: ${error}`, 500);
   }
 };
 
-const getSingleBlog = async (req: Request, res: Response) => {
+const getSingleScheduling = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const blog = await BlogService.getSingleBlog(slug);
+    const scheduling = await BlogService.getSingleBlog(slug);
     res.status(200).json({
-      message: "Blog retrieved successfully",
-      data: blog,
+      message: "Scheduling retrieved successfully",
+      data: scheduling,
     });
   } catch (error) {
-    throw new AppError(`Failed to retrieve blog: ${error}`, 500);
+    throw new AppError(`Failed to retrieve scheduling: ${error}`, 500);
   }
 };
 
-const updateBlog = async (req: Request, res: Response) => {
+const updateScheduling = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updatedBlog = await BlogService.updateBlogs(id, req.body);
+    const updatedScheduling = await BlogService.updateBlogs(id, req.body);
     res.status(httpStatus.OK).json({
-      message: "Blog updated successfully",
-      data: updatedBlog,
+      message: "Scheduling updated successfully",
+      data: updatedScheduling,
     });
   } catch (error) {
-    throw new AppError(`Failed to update blog: ${error}`, 500);
+    throw new AppError(`Failed to update scheduling: ${error}`, 500);
   }
 };
 
 
-const deleteBlog = async (req: Request, res: Response) => {
+const deleteScheduling = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     await BlogService.deleteBlogs(id);
     res.status(204).json({
-      message: "Blog deleted successfully",
+      message: "Scheduling deleted successfully",
     });
   } catch (error) {
-    throw new AppError(`Failed to delete blog: ${error}`, 500);
+    throw new AppError(`Failed to delete scheduling: ${error}`, 500);
   }
 };
 
-export const BlogController = {
-  createBlog,
-  getAllBlogs,
-  getSingleBlog,
-  updateBlog,
-  deleteBlog,
+export const SchedulingController = {
+  createScheduling,
+  getAllSchedulings,
+  getSingleScheduling,
+  updateScheduling,
+  deleteScheduling,
 };
