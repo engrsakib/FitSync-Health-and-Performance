@@ -52,10 +52,55 @@ export const createSchedule = async (payload: ISchedule) => {
   return schedule;
 };
 
-const updateSchedules = async (id: string, payload: Partial<ISchedule>) => {
+
+/**
+ * Updates a schedule by ID. Ensures:
+ * - Title duplicate validation (case-insensitive, excluding self)
+ * - Day-wise maximum limit (if classDate is changed)
+ * - Auto endTime calculation (if startTime updated)
+ */
+export const updateSchedule = async (id: string, payload: Partial<ISchedule>) => {
   const schedule = await Schedule.findById(id);
   if (!schedule) {
     throw new Error("Schedule not found");
+  }
+
+  // Title duplicate check (ignore self)
+  if (payload.title && payload.title !== schedule.title) {
+    const existingSchedule = await Schedule.findOne({
+      _id: { $ne: id },
+      title: { $regex: new RegExp(`^${payload.title}$`, "i") },
+    });
+    if (existingSchedule) {
+      throw new Error("Schedule with this title already exists.");
+    }
+  }
+
+  // If classDate is being changed, check for daily schedule limit
+  if (payload.classDate && payload.classDate !== schedule.classDate) {
+    const classDate = new Date(payload.classDate);
+    const startOfDay = new Date(classDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(classDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Exclude current schedule from the count
+    const scheduleCount = await Schedule.countDocuments({
+      classDate: {
+        $gte: startOfDay,
+        $lte: endOfDay,
+      },
+      _id: { $ne: id },
+    });
+
+    if (scheduleCount >= 5) {
+      throw new Error("Schedule limit exceeded: Maximum 5 schedules allowed per day.");
+    }
+  }
+
+  // Auto set endTime if startTime is updated
+  if (payload.startTime) {
+    payload.endTime = calculateEndTime(payload.startTime);
   }
 
   await Schedule.findByIdAndUpdate(id, payload, { new: true });
@@ -89,5 +134,5 @@ export const ScheduleService = {
   getAllSchedules,
   getSingleSchedule,
   deleteSchedules,
-  updateSchedules,
+  updateSchedule,
 };

@@ -44,7 +44,7 @@ const getSingleScheduling = async (req: Request, res: Response) => {
 const updateScheduling = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const updatedScheduling = await ScheduleService.updateSchedules(id, req.body);
+    const updatedScheduling = await ScheduleService.updateSchedule(id, req.body);
     res.status(httpStatus.OK).json({
       message: "Scheduling updated successfully",
       data: updatedScheduling,
