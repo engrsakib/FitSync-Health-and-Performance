@@ -1,55 +1,59 @@
 import { calculateEndTime } from "../../util/schedule.utils";
-import { ISchedule } from "./scheduling.interface";
-import { Schedule } from "./scheduling.mode";
+import { Schedule } from "../scheduling/scheduling.mode";
+import { IBooking } from "./booking.interface";
+import { Booking } from "./booking.model";
 
 
-export const createSchedule = async (payload: ISchedule) => {
-  const BaseSlug = payload.title.toLowerCase().split(" ").join("-");
-  let slug = `${BaseSlug}-schedule`;
+export const createBooking = async (payload: IBooking) => {
+  // ১. Check if schedule exists
+  const schedule = await Schedule.findById(payload.schedule);
+  if (!schedule) {
+    throw new Error("Schedule not found.");
+  }
 
-  // নির্দিষ্ট তারিখে ৫টা শিডিউল আছে কিনা চেক
-  const classDate = new Date(payload.classDate);
-  // Start-of-day & end-of-day for the classDate
-  const startOfDay = new Date(classDate);
+  // ২. Check duplicate booking for same trainee & schedule
+  const existingBooking = await Booking.findOne({
+    schedule: payload.schedule,
+    trainee: payload.trainee,
+  });
+  if (existingBooking) {
+    throw new Error("Trainee already booked this schedule.");
+  }
+
+  // ৩. Check maxTrainees limit for the schedule
+  const bookingCount = await Booking.countDocuments({
+    schedule: payload.schedule,
+    status: { $ne: "cancelled" }, // Exclude cancelled
+  });
+
+  const maxTrainees = schedule.maxTrainees ?? 10;
+  if (bookingCount >= maxTrainees) {
+    throw new Error("Schedule is full. No more bookings allowed.");
+  }
+
+  // ৪. (Optional) Check total bookings for the day for this schedule (limit 5 per day)
+  // If you want to enforce: any schedule can be booked max 5 times per day
+  const startOfDay = new Date(payload.bookingDate);
   startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date(classDate);
+  const endOfDay = new Date(payload.bookingDate);
   endOfDay.setHours(23, 59, 59, 999);
 
-  const scheduleCount = await Schedule.countDocuments({
-    classDate: {
+  const dailyBookingCount = await Booking.countDocuments({
+    schedule: payload.schedule,
+    bookingDate: {
       $gte: startOfDay,
       $lte: endOfDay,
     },
-  }); 
-
-  if (scheduleCount >= 5) {
-    throw new Error("Schedule limit exceeded: Maximum 5 schedules allowed per day.");
-  }
-
-  // Title duplicate check (case-insensitive)
-  const existingSchedule = await Schedule.findOne({
-    title: { $regex: new RegExp(`^${payload.title}$`, "i") },
+    status: { $ne: "cancelled" },
   });
-  if (existingSchedule) {
-    throw new Error("Schedule with this title already exists.");
+
+  if (dailyBookingCount >= 5) {
+    throw new Error("Booking limit exceeded: Maximum 5 bookings allowed per schedule per day.");
   }
 
-  // Slug uniqueness
-  let count = 0;
-  while (await Schedule.exists({ slug })) {
-    count++;
-    slug = `${BaseSlug}-schedule-${count}`;
-  }
-  payload.slug = slug;
-
-  // startTime থেকে ২ ঘণ্টা পরে endTime সেট করা
-  if (payload.startTime) {
-    payload.endTime = calculateEndTime(payload.startTime);
-  }
-
-  // Create schedule
-  const schedule = await Schedule.create(payload);
-  return schedule;
+  // ৫. Create booking
+  const booking = await Booking.create(payload);
+  return booking;
 };
 
 
@@ -59,8 +63,8 @@ export const createSchedule = async (payload: ISchedule) => {
  * - Day-wise maximum limit (if classDate is changed)
  * - Auto endTime calculation (if startTime updated)
  */
-export const updateSchedule = async (id: string, payload: Partial<ISchedule>) => {
-  const schedule = await Schedule.findById(id);
+export const updateBooking = async (id: string, payload: Partial<IBooking>) => {
+  const schedule = await Booking.findById(id);
   if (!schedule) {
     throw new Error("Schedule not found");
   }
@@ -107,32 +111,32 @@ export const updateSchedule = async (id: string, payload: Partial<ISchedule>) =>
   return Schedule.findById(id);
 };
 
-const getAllSchedules = async () => {
-  const schedules = await Schedule.find();
-  return schedules;
+const getAllBookings = async () => {
+  const bookings = await Booking.find();
+  return bookings;
 };
 
-const getSingleSchedule = async (slug: string) => {
-  const schedule = await Schedule.findOne({ where: { slug } });
-  if (!schedule) {
-    throw new Error("Schedule not found");
+const getSingleBooking = async (slug: string) => {
+  const booking = await Booking.findOne({ where: { slug } });
+  if (!booking) {
+    throw new Error("Booking not found");
   }
-  return schedule;
+  return booking;
 };
 
-const deleteSchedules = async (id: string) => {
-  const schedule = await Schedule.findOne({ where: { id } });
-  if (!schedule) {
-    throw new Error("Schedule not found");
+const deleteBookings = async (id: string) => {
+  const booking = await Booking.findOne({ where: { id } });
+  if (!booking) {
+    throw new Error("Booking not found");
   }
-  await Schedule.deleteOne({ where: { id } });
-  return schedule;
+  await Booking.deleteOne({ where: { id } });
+  return booking;
 };
 
 export const BookingService = {
-  createSchedule,
-  getAllSchedules,
-  getSingleSchedule,
-  deleteSchedules,
-  updateSchedule,
+  createBooking,
+  getAllBookings,
+  getSingleBooking,
+  deleteBookings,
+  updateBookings,
 };
