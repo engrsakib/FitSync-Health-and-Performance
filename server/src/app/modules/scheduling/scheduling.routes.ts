@@ -12,5 +12,6 @@ router.get("/", verifyToken(role.ADMIN, role.TRAINEE, role.TRAINER), SchedulingC
 router.get("/:slug", verifyToken(role.ADMIN, role.TRAINEE, role.TRAINER), SchedulingController.getSingleScheduling);
 router.patch("/:id", verifyToken(role.ADMIN), validateRequest(updateScheduleZodSchema), SchedulingController.updateScheduling);
 router.delete("/:id", verifyToken(role.ADMIN), SchedulingController.deleteScheduling);
+router.get("/trainer/:trainerId", verifyToken(role.ADMIN, role.TRAINEE, role.TRAINER), SchedulingController.getAllSchedulesByTrainer);
 
 export const SchedulingRoutes = router;

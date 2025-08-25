@@ -138,13 +138,16 @@ const deleteSchedules = async (id: string) => {
   return schedule;
 };
 
-
-
+const getScheduleByTrainer = async (trainerId: string) => {
+  const schedules = await Schedule.find({ trainer: trainerId });
+  return schedules;
+};
 
 export const ScheduleService = {
   createSchedule,
   getAllSchedules,
   getSingleSchedule,
+  getScheduleByTrainer,
   deleteSchedules,
   updateSchedule,
 };

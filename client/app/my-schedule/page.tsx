@@ -1,4 +1,6 @@
 "use client"
+
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Ring, MeshDistortMaterial } from "@react-three/drei"
@@ -10,8 +12,8 @@ import { Badge } from "@/components/ui/badge"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAppSelector } from "@/src/redux/store"
 import Link from "next/link"
+import { config } from "@/src/lib/config"
 
-// 3D Animated Ring Component
 function AnimatedRing() {
   return (
     <Ring args={[0.5, 1.5, 32]} scale={1.3}>
@@ -28,72 +30,65 @@ function SceneLoader() {
   )
 }
 
+type ScheduleType = {
+  _id: string
+  title: string
+  description: string
+  classDate: string
+  startTime: string
+  endTime: string
+  maxTrainees: number
+  trainees: string[]
+  status: string
+  isCancelled: boolean
+  isCompleted: boolean
+  isFull: boolean
+  createdAt: string
+}
+
 export default function MySchedulePage() {
   const { user } = useAppSelector((state) => state.auth)
+  const [schedules, setSchedules] = useState<ScheduleType[]>([])
+  const [loading, setLoading] = useState(true)
 
-  // Mock schedule data for trainer - replace with actual API call
-  const mockSchedules = [
-    {
-      id: "1",
-      title: "Morning Yoga",
-      description: "Start your day with energizing yoga",
-      date: "2024-01-15",
-      start_time: "07:00",
-      end_time: "08:00",
-      capacity: 20,
-      booked: 15,
-      status: "active" as const,
-      created_at: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "2",
-      title: "HIIT Training",
-      description: "High intensity interval training",
-      date: "2024-01-15",
-      start_time: "18:00",
-      end_time: "19:00",
-      capacity: 15,
-      booked: 12,
-      status: "active" as const,
-      created_at: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "3",
-      title: "Evening Pilates",
-      description: "Relaxing pilates session",
-      date: "2024-01-10",
-      start_time: "19:00",
-      end_time: "20:00",
-      capacity: 18,
-      booked: 18,
-      status: "completed" as const,
-      created_at: "2024-01-01T00:00:00Z",
-    },
-    {
-      id: "4",
-      title: "Weekend Bootcamp",
-      description: "Intensive weekend training",
-      date: "2024-01-08",
-      start_time: "09:00",
-      end_time: "10:30",
-      capacity: 12,
-      booked: 8,
-      status: "cancelled" as const,
-      created_at: "2024-01-01T00:00:00Z",
-    },
-  ]
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "cancelled":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-      case "completed":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+  useEffect(() => {
+    async function fetchTrainerSchedules() {
+      if (!user?.id) return
+      setLoading(true)
+      try {
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("acccessToken") ||
+              localStorage.getItem("access_token") ||
+              ""
+            : ""
+        const res = await fetch(
+          `${config.api_base_url}/api/v1/scheduling/trainer/${user.id}`,
+          {
+            headers: {
+              Authorization: `${token}`,
+            },
+          }
+        )
+        const result = await res.json()
+        if (res.ok && result.success !== false && Array.isArray(result.data)) {
+          setSchedules(result.data)
+        } else {
+          setSchedules([])
+        }
+      } catch {
+        setSchedules([])
+      }
+      setLoading(false)
     }
+    fetchTrainerSchedules()
+  }, [user?.id])
+
+  const getStatusColor = (status: string, isCancelled: boolean, isCompleted: boolean) => {
+    if (isCancelled) return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+    if (isCompleted) return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+    if (status === "scheduled") return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+    return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
   }
 
   const getAvailabilityColor = (booked: number, capacity: number) => {
@@ -103,21 +98,22 @@ export default function MySchedulePage() {
     return "text-green-600"
   }
 
-  const activeSchedules = mockSchedules.filter((s) => s.status === "active")
-  const completedSchedules = mockSchedules.filter((s) => s.status === "completed")
-  const cancelledSchedules = mockSchedules.filter((s) => s.status === "cancelled")
+  // Categorize
+  const activeSchedules = schedules.filter((s) => s.status === "scheduled" && !s.isCancelled && !s.isCompleted)
+  const completedSchedules = schedules.filter((s) => s.isCompleted)
+  const cancelledSchedules = schedules.filter((s) => s.isCancelled)
 
   const scheduleStats = {
-    total: mockSchedules.length,
+    total: schedules.length,
     active: activeSchedules.length,
     completed: completedSchedules.length,
     cancelled: cancelledSchedules.length,
-    totalBookings: mockSchedules.reduce((sum, s) => sum + s.booked, 0),
+    totalBookings: schedules.reduce((sum, s) => sum + (s.trainees?.length ?? 0), 0),
   }
 
-  const renderScheduleCard = (schedule: (typeof mockSchedules)[0], index: number) => (
+  const renderScheduleCard = (schedule: ScheduleType, index: number) => (
     <motion.div
-      key={schedule.id}
+      key={schedule._id}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -130,30 +126,36 @@ export default function MySchedulePage() {
               <CardTitle className="text-xl">{schedule.title}</CardTitle>
               <CardDescription>{schedule.description}</CardDescription>
             </div>
-            <Badge className={getStatusColor(schedule.status)}>{schedule.status}</Badge>
+            <Badge className={getStatusColor(schedule.status, schedule.isCancelled, schedule.isCompleted)}>
+              {schedule.isCancelled
+                ? "cancelled"
+                : schedule.isCompleted
+                ? "completed"
+                : schedule.status}
+            </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Calendar className="h-4 w-4" />
-              <span>{new Date(schedule.date).toLocaleDateString()}</span>
+              <span>{new Date(schedule.classDate).toLocaleDateString()}</span>
             </div>
             <div className="flex items-center space-x-2 text-sm text-muted-foreground">
               <Clock className="h-4 w-4" />
               <span>
-                {schedule.start_time} - {schedule.end_time}
+                {schedule.startTime} - {schedule.endTime}
               </span>
             </div>
             <div className="flex items-center space-x-2 text-sm col-span-full">
               <Users className="h-4 w-4" />
-              <span className={getAvailabilityColor(schedule.booked, schedule.capacity)}>
-                {schedule.booked}/{schedule.capacity} participants
+              <span className={getAvailabilityColor(schedule.trainees?.length ?? 0, schedule.maxTrainees)}>
+                {(schedule.trainees?.length ?? 0)}/{schedule.maxTrainees} participants
               </span>
             </div>
           </div>
 
-          {schedule.status === "active" && (
+          {!schedule.isCancelled && !schedule.isCompleted && (
             <div className="flex space-x-2">
               <Button variant="outline" size="sm" className="flex-1 bg-transparent">
                 <Eye className="h-4 w-4 mr-1" />
@@ -262,7 +264,11 @@ export default function MySchedulePage() {
           </TabsList>
 
           <TabsContent value="active" className="space-y-6">
-            {activeSchedules.length > 0 ? (
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <SceneLoader />
+              </div>
+            ) : activeSchedules.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {activeSchedules.map((schedule, index) => renderScheduleCard(schedule, index))}
               </div>
@@ -282,7 +288,11 @@ export default function MySchedulePage() {
           </TabsContent>
 
           <TabsContent value="completed" className="space-y-6">
-            {completedSchedules.length > 0 ? (
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <SceneLoader />
+              </div>
+            ) : completedSchedules.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {completedSchedules.map((schedule, index) => renderScheduleCard(schedule, index))}
               </div>
@@ -296,7 +306,11 @@ export default function MySchedulePage() {
           </TabsContent>
 
           <TabsContent value="cancelled" className="space-y-6">
-            {cancelledSchedules.length > 0 ? (
+            {loading ? (
+              <div className="flex justify-center py-12">
+                <SceneLoader />
+              </div>
+            ) : cancelledSchedules.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {cancelledSchedules.map((schedule, index) => renderScheduleCard(schedule, index))}
               </div>

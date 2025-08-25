@@ -67,10 +67,24 @@ const deleteScheduling = async (req: Request, res: Response) => {
   }
 };
 
+const getAllSchedulesByTrainer = async (req: Request, res: Response) => {
+  try {
+    const { trainerId } = req.params;
+    const schedules = await ScheduleService.getScheduleByTrainer(trainerId);
+    res.status(httpStatus.OK).json({
+      message: "Schedules retrieved successfully",
+      data: schedules,
+    });
+  } catch (error) {
+    throw new AppError(`Failed to retrieve schedules: ${error}`, httpStatus.INTERNAL_SERVER_ERROR);
+  }
+};
+
 export const SchedulingController = {
   createScheduling,
   getAllSchedulings,
   getSingleScheduling,
+  getAllSchedulesByTrainer,
   updateScheduling,
   deleteScheduling,
 };
