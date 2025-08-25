@@ -2,115 +2,42 @@
 
 import type React from "react"
 
+import { useState } from "react"
 import { motion } from "framer-motion"
-import { Canvas } from "@react-three/fiber"
-import { OrbitControls, Sphere, MeshDistortMaterial, Box } from "@react-three/drei"
-import { Suspense, useState, useRef, useEffect } from "react"
+import { toast } from "sonner"
+import { z } from "zod"
+import Link from "next/link"
+import {
+  Calculator,
+  BarChart3,
+  Mail,
+  MapPin,
+  Phone,
+  ArrowRight,
+  Calendar,
+  Users,
+  Award,
+  TrendingUp,
+  Activity,
+  Target,
+  Heart,
+  Droplets,
+  Utensils,
+  Clock,
+} from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
-import {
-  Users,
-  Calendar,
-  TrendingUp,
-  Star,
-  ArrowRight,
-  Activity,
-  Target,
-  Award,
-  Heart,
-  Calculator,
-  BarChart3,
-  Droplets,
-  Clock,
-  Utensils,
-  MapPin,
-  Phone,
-  Mail,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react"
-import Link from "next/link"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from "recharts"
 import { useAppSelector, useAppDispatch } from "@/src/redux/store"
 import { set_bmi_data, toggle_targets_modal } from "@/src/redux/slices/ui_slice"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
-import { toast } from "sonner"
-import { z } from "zod"
 import recsData from "@/src/data/recs.json"
-
-function AnimatedSphere() {
-  return (
-    <Sphere visible args={[1, 100, 200]} scale={2}>
-      <MeshDistortMaterial color="#dc2626" attach="material" distort={0.3} speed={1.5} roughness={0} />
-    </Sphere>
-  )
-}
-
-function FloatingCube({ position }: { position: [number, number, number] }) {
-  return (
-    <Box position={position} args={[0.5, 0.5, 0.5]}>
-      <MeshDistortMaterial color="#f59e0b" attach="material" distort={0.2} speed={2} roughness={0} />
-    </Box>
-  )
-}
-
-function SceneLoader() {
-  return (
-    <div className="flex items-center justify-center h-full">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-    </div>
-  )
-}
-
-const heroSlides = [
-  {
-    title: "Transform Your Fitness Journey",
-    subtitle: "Join FitSync and discover personalized workouts",
-    image: "/fitness-gym-modern-equipment.png",
-    cta: "Start Your Journey",
-  },
-  {
-    title: "Expert Trainers at Your Service",
-    subtitle: "Connect with certified professionals",
-    image: "/personal-trainer-coaching-fitness.png",
-    cta: "Meet Our Trainers",
-  },
-  {
-    title: "Track Your Progress",
-    subtitle: "Advanced analytics and goal tracking",
-    image: "/fitness-tracking-charts.png",
-    cta: "View Analytics",
-  },
-  {
-    title: "Community Support",
-    subtitle: "Join thousands of fitness enthusiasts",
-    image: "/fitness-community-group-workout.png",
-    cta: "Join Community",
-  },
-]
-
-const healthAwarenessData = [
-  { metric: "Exercise Frequency", Bangladesh: 45, International: 72 },
-  { metric: "Balanced Diet", Bangladesh: 38, International: 68 },
-  { metric: "Sleep Sufficiency", Bangladesh: 52, International: 75 },
-  { metric: "Water Intake", Bangladesh: 41, International: 81 },
-]
-
-const healthTips = [
-  { icon: Droplets, tip: "Drink 8-10 glasses of water daily", color: "text-blue-500" },
-  { icon: Activity, tip: "Exercise for 30 minutes daily", color: "text-red-500" },
-  { icon: Clock, tip: "Get 7-8 hours of quality sleep", color: "text-purple-500" },
-  { icon: Utensils, tip: "Eat 5 servings of fruits & vegetables", color: "text-green-500" },
-  { icon: Heart, tip: "Practice meditation for mental health", color: "text-pink-500" },
-  { icon: Target, tip: "Set realistic fitness goals", color: "text-orange-500" },
-  { icon: Users, tip: "Stay connected with fitness community", color: "text-indigo-500" },
-  { icon: Award, tip: "Celebrate small victories", color: "text-yellow-500" },
-]
+import HeroSection from "@/src/components/home/hero-section"
+import HealthTipsSection from "@/src/components/home/health-tips-section"
 
 const contactSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -118,20 +45,20 @@ const contactSchema = z.object({
   message: z.string().min(10, "Message must be at least 10 characters"),
 })
 
-const targetsSchema = z.object({
-  gender: z.enum(["male", "female"]),
-  age: z.number().min(13).max(100),
-  height: z.number().min(100).max(250),
-  weight: z.number().min(30).max(300),
-  activity: z.enum(["low", "med", "high"]),
-})
+const healthAwarenessData = [
+  { metric: "Regular Exercise", Bangladesh: 35, International: 65 },
+  { metric: "Balanced Diet", Bangladesh: 42, International: 78 },
+  { metric: "Mental Health Care", Bangladesh: 28, International: 72 },
+  { metric: "Preventive Checkups", Bangladesh: 31, International: 68 },
+  { metric: "Sleep Quality", Bangladesh: 45, International: 71 },
+  { metric: "Stress Management", Bangladesh: 33, International: 69 },
+]
 
 export default function HomePage() {
-  const { user, is_authenticated } = useAppSelector((state) => state.auth)
+  const { user, is_authenticated, loginuser } = useAppSelector((state) => state.auth)
   const { bmi_data, is_targets_modal_open } = useAppSelector((state) => state.ui)
   const dispatch = useAppDispatch()
 
-  const [currentSlide, setCurrentSlide] = useState(0)
   const [bmiForm, setBmiForm] = useState({
     gender: "male" as "male" | "female",
     height: "",
@@ -141,6 +68,7 @@ export default function HomePage() {
     age: "",
     unit: "cm" as "cm" | "ft",
   })
+
   const [targetsForm, setTargetsForm] = useState({
     gender: "male" as "male" | "female",
     age: "",
@@ -151,11 +79,13 @@ export default function HomePage() {
     activity: "med" as "low" | "med" | "high",
     unit: "cm" as "cm" | "ft",
   })
+
   const [contactForm, setContactForm] = useState({
     name: "",
     email: "",
     message: "",
   })
+
   const [dailyTargets, setDailyTargets] = useState<{
     water: number
     calories: number
@@ -164,15 +94,6 @@ export default function HomePage() {
     bmi?: number
     bmiCategory?: string
   } | null>(null)
-
-  const carouselRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentSlide((prev) => (prev + 1) % heroSlides.length)
-    }, 5000)
-    return () => clearInterval(interval)
-  }, [])
 
   const calculateBMI = () => {
     const weight = Number.parseFloat(bmiForm.weight)
@@ -184,7 +105,7 @@ export default function HomePage() {
     } else {
       const feet = Number.parseFloat(bmiForm.heightFeet) || 0
       const inches = Number.parseFloat(bmiForm.heightInches) || 0
-      heightValue = (feet * 12 + inches) * 2.54 // Convert to cm
+      heightValue = (feet * 12 + inches) * 2.54
     }
 
     if (!weight || !heightValue || !age) {
@@ -225,7 +146,7 @@ export default function HomePage() {
       } else {
         const feet = Number.parseFloat(targetsForm.heightFeet) || 0
         const inches = Number.parseFloat(targetsForm.heightInches) || 0
-        heightValue = (feet * 12 + inches) * 2.54 // Convert to cm
+        heightValue = (feet * 12 + inches) * 2.54
       }
 
       if (!age || !weight || !heightValue) {
@@ -233,15 +154,6 @@ export default function HomePage() {
         return
       }
 
-      const data = {
-        gender: targetsForm.gender,
-        age,
-        height: heightValue,
-        weight,
-        activity: targetsForm.activity,
-      }
-
-      // Calculate BMI
       const heightInM = heightValue / 100
       const bmi = weight / (heightInM * heightInM)
       let bmiCategory = ""
@@ -250,25 +162,21 @@ export default function HomePage() {
       else if (bmi < 30) bmiCategory = "Overweight"
       else bmiCategory = "Obese"
 
-      // Calculate targets
-      const water = Math.round(data.weight * recsData.water_liters_per_kg * 10) / 10
-      const baseCalories = recsData.calorie_base_by_gender[data.gender]
-      const calories = Math.round(baseCalories * recsData.activity_multipliers[data.activity])
+      const water = Math.round(weight * recsData.water_liters_per_kg * 10) / 10
+      const baseCalories = recsData.calorie_base_by_gender[targetsForm.gender]
+      const calories = Math.round(baseCalories * recsData.activity_multipliers[targetsForm.activity])
 
       let caloriesBurn = 0
-      if (bmiCategory === "Overweight")
-        caloriesBurn = Math.round(calories * 0.15) // 15% deficit
-      else if (bmiCategory === "Obese")
-        caloriesBurn = Math.round(calories * 0.25) // 25% deficit
-      else if (bmiCategory === "Underweight")
-        caloriesBurn = 0 // No deficit needed
-      else caloriesBurn = Math.round(calories * 0.1) // 10% for maintenance
+      if (bmiCategory === "Overweight") caloriesBurn = Math.round(calories * 0.15)
+      else if (bmiCategory === "Obese") caloriesBurn = Math.round(calories * 0.25)
+      else if (bmiCategory === "Underweight") caloriesBurn = 0
+      else caloriesBurn = Math.round(calories * 0.1)
 
       let sleep = 7.0
-      if (data.age >= 18 && data.age <= 25) sleep = recsData.sleep_by_age["18-25"]
-      else if (data.age >= 26 && data.age <= 40) sleep = recsData.sleep_by_age["26-40"]
-      else if (data.age >= 41 && data.age <= 60) sleep = recsData.sleep_by_age["41-60"]
-      else if (data.age > 60) sleep = recsData.sleep_by_age["60+"]
+      if (age >= 18 && age <= 25) sleep = recsData.sleep_by_age["18-25"]
+      else if (age >= 26 && age <= 40) sleep = recsData.sleep_by_age["26-40"]
+      else if (age >= 41 && age <= 60) sleep = recsData.sleep_by_age["41-60"]
+      else if (age > 60) sleep = recsData.sleep_by_age["60+"]
 
       setDailyTargets({
         water,
@@ -331,125 +239,44 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section - Enhanced for mobile */}
-      <section className="relative h-screen overflow-hidden">
-        <div className="absolute inset-0">
-          {heroSlides.map((slide, index) => (
-            <motion.div
-              key={index}
-              className="absolute inset-0"
-              initial={{ opacity: 0, scale: 1.1 }}
-              animate={{
-                opacity: currentSlide === index ? 1 : 0,
-                scale: currentSlide === index ? 1 : 1.1,
-              }}
-              transition={{ duration: 1, ease: "easeInOut" }}
-            >
-              <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: `url(${slide.image})` }} />
-              <div className="absolute inset-0 bg-black/40" />
-            </motion.div>
-          ))}
-        </div>
+      {/* Hero Section */}
+      <HeroSection />
 
-        {/* 3D Background Element - Hidden on mobile for performance */}
-        <div className="absolute top-20 right-20 w-32 h-32 opacity-30 hidden lg:block">
-          <Canvas>
-            <ambientLight intensity={0.5} />
-            <pointLight position={[10, 10, 10]} />
-            <Suspense fallback={null}>
-              <FloatingCube position={[0, 0, 0]} />
-              <OrbitControls enableZoom={false} autoRotate autoRotateSpeed={2} />
-            </Suspense>
-          </Canvas>
-        </div>
-
-        <div className="relative z-10 h-full flex items-center">
-          <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-            <motion.div
-              key={currentSlide}
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.3 }}
-              className="max-w-2xl text-white"
-            >
-              <Badge variant="secondary" className="mb-4">
-                <Star className="w-4 h-4 mr-1" />
-                #1 Fitness Platform in Bangladesh
-              </Badge>
-              <h1 className="text-3xl sm:text-4xl lg:text-6xl xl:text-7xl font-bold mb-6 leading-tight">
-                {heroSlides[currentSlide].title}
-              </h1>
-              <p className="text-lg sm:text-xl mb-8 opacity-90">{heroSlides[currentSlide].subtitle}</p>
-              <Link href={is_authenticated ? "/all-schedule" : "/login"}>
-                <Button size="lg" className="group">
-                  {heroSlides[currentSlide].cta}
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-            </motion.div>
-          </div>
-        </div>
-
-        {/* Carousel Controls */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-2">
-          {heroSlides.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setCurrentSlide(index)}
-              className={`w-3 h-3 rounded-full transition-all ${currentSlide === index ? "bg-white" : "bg-white/50"}`}
-            />
-          ))}
-        </div>
-
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length)}
-          className="absolute left-2 sm:left-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
-        >
-          <ChevronLeft className="w-6 h-6 sm:w-8 sm:h-8" />
-        </button>
-        <button
-          onClick={() => setCurrentSlide((prev) => (prev + 1) % heroSlides.length)}
-          className="absolute right-2 sm:right-4 top-1/2 transform -translate-y-1/2 text-white/70 hover:text-white transition-colors"
-        >
-          <ChevronRight className="w-6 h-6 sm:w-8 sm:h-8" />
-        </button>
-      </section>
-
-      {/* BMI Calculator - Enhanced with feet/inches option */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* BMI Calculator Section */}
+      <section className="py-16 sm:py-20 lg:py-24 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 lg:mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">BMI Calculator</h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Calculate your Body Mass Index and understand your health status
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">BMI Calculator</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-3xl mx-auto">
+              Calculate your Body Mass Index and understand your health status with precision
             </p>
           </motion.div>
 
-          <div className="max-w-4xl mx-auto">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Calculator className="w-5 h-5" />
+          <div className="max-w-5xl mx-auto">
+            <Card className="shadow-xl border-border/50">
+              <CardHeader className="pb-6">
+                <CardTitle className="flex items-center gap-3 text-xl sm:text-2xl">
+                  <Calculator className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                   Calculate Your BMI
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="grid lg:grid-cols-2 gap-8">
-                  <div className="space-y-4">
-                    <div className="grid sm:grid-cols-2 gap-4">
+              <CardContent className="p-6 sm:p-8">
+                <div className="grid lg:grid-cols-2 gap-8 lg:gap-12">
+                  <div className="space-y-6">
+                    <div className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                       <div>
-                        <Label>Gender</Label>
+                        <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Gender</Label>
                         <Select
                           value={bmiForm.gender}
                           onValueChange={(value: "male" | "female") => setBmiForm({ ...bmiForm, gender: value })}
                         >
-                          <SelectTrigger>
+                          <SelectTrigger className="h-10 sm:h-12 border-border">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
@@ -459,10 +286,11 @@ export default function HomePage() {
                         </Select>
                       </div>
                       <div>
-                        <Label>Age</Label>
+                        <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Age</Label>
                         <Input
                           type="number"
-                          placeholder="Age"
+                          placeholder="Enter your age"
+                          className="h-10 sm:h-12 border-border"
                           value={bmiForm.age}
                           onChange={(e) => setBmiForm({ ...bmiForm, age: e.target.value })}
                         />
@@ -470,14 +298,14 @@ export default function HomePage() {
                     </div>
 
                     <div>
-                      <Label>Height Unit</Label>
+                      <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Height Unit</Label>
                       <Select
                         value={bmiForm.unit}
                         onValueChange={(value: "cm" | "ft") =>
                           setBmiForm({ ...bmiForm, unit: value, height: "", heightFeet: "", heightInches: "" })
                         }
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="h-10 sm:h-12 border-border">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -489,30 +317,33 @@ export default function HomePage() {
 
                     {bmiForm.unit === "cm" ? (
                       <div>
-                        <Label>Height (cm)</Label>
+                        <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Height (cm)</Label>
                         <Input
                           type="number"
-                          placeholder="Height in cm"
+                          placeholder="Enter height in cm"
+                          className="h-10 sm:h-12 border-border"
                           value={bmiForm.height}
                           onChange={(e) => setBmiForm({ ...bmiForm, height: e.target.value })}
                         />
                       </div>
                     ) : (
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-3 sm:gap-4">
                         <div>
-                          <Label>Feet</Label>
+                          <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Feet</Label>
                           <Input
                             type="number"
                             placeholder="Feet"
+                            className="h-10 sm:h-12 border-border"
                             value={bmiForm.heightFeet}
                             onChange={(e) => setBmiForm({ ...bmiForm, heightFeet: e.target.value })}
                           />
                         </div>
                         <div>
-                          <Label>Inches</Label>
+                          <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Inches</Label>
                           <Input
                             type="number"
                             placeholder="Inches"
+                            className="h-10 sm:h-12 border-border"
                             value={bmiForm.heightInches}
                             onChange={(e) => setBmiForm({ ...bmiForm, heightInches: e.target.value })}
                           />
@@ -521,15 +352,16 @@ export default function HomePage() {
                     )}
 
                     <div>
-                      <Label>Weight (kg)</Label>
+                      <Label className="text-sm sm:text-base font-medium mb-2 sm:mb-3 block">Weight (kg)</Label>
                       <Input
                         type="number"
-                        placeholder="Weight"
+                        placeholder="Enter your weight"
+                        className="h-10 sm:h-12 border-border"
                         value={bmiForm.weight}
                         onChange={(e) => setBmiForm({ ...bmiForm, weight: e.target.value })}
                       />
                     </div>
-                    <Button onClick={calculateBMI} className="w-full">
+                    <Button onClick={calculateBMI} className="w-full h-10 sm:h-12 text-base sm:text-lg font-semibold">
                       Calculate BMI
                     </Button>
                   </div>
@@ -538,28 +370,34 @@ export default function HomePage() {
                     <motion.div
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="bg-gradient-to-br from-primary/10 to-secondary/10 rounded-lg p-6"
+                      className="bg-muted/50 rounded-2xl p-6 sm:p-8"
                     >
-                      <h3 className="text-xl sm:text-2xl font-bold mb-4">Your BMI Result</h3>
+                      <h3 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6 text-center">Your BMI Result</h3>
                       <div className="text-center">
-                        <div className="text-3xl sm:text-4xl font-bold text-primary mb-2">{bmi_data.bmi}</div>
+                        <div className="text-4xl sm:text-5xl font-bold text-primary mb-4">{bmi_data.bmi}</div>
                         <div
-                          className={`text-base sm:text-lg font-semibold mb-4 ${
+                          className={`text-lg sm:text-xl font-semibold mb-4 sm:mb-6 px-3 sm:px-4 py-2 rounded-full inline-block ${
                             bmi_data.category === "Normal"
-                              ? "text-green-600"
+                              ? "text-green-700 bg-green-100 dark:text-green-300 dark:bg-green-900/30"
                               : bmi_data.category === "Underweight"
-                                ? "text-blue-600"
+                                ? "text-blue-700 bg-blue-100 dark:text-blue-300 dark:bg-blue-900/30"
                                 : bmi_data.category === "Overweight"
-                                  ? "text-orange-600"
-                                  : "text-red-600"
+                                  ? "text-orange-700 bg-orange-100 dark:text-orange-300 dark:bg-orange-900/30"
+                                  : "text-red-700 bg-red-100 dark:text-red-300 dark:bg-red-900/30"
                           }`}
                         >
                           {bmi_data.category}
                         </div>
-                        <div className="text-sm text-muted-foreground space-y-1">
-                          <p>Height: {Math.round(bmi_data.height)} cm</p>
-                          <p>Weight: {bmi_data.weight} kg</p>
-                          <p>Age: {bmi_data.age} years</p>
+                        <div className="text-sm sm:text-base text-muted-foreground space-y-2 bg-background/50 rounded-lg p-3 sm:p-4">
+                          <p>
+                            <strong>Height:</strong> {Math.round(bmi_data.height)} cm
+                          </p>
+                          <p>
+                            <strong>Weight:</strong> {bmi_data.weight} kg
+                          </p>
+                          <p>
+                            <strong>Age:</strong> {bmi_data.age} years
+                          </p>
                         </div>
                       </div>
                     </motion.div>
@@ -571,104 +409,102 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Health Awareness Chart - Enhanced responsiveness */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Health Awareness Chart */}
+      <section className="py-16 sm:py-20 lg:py-24">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 lg:mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">বর্তমান স্বাস্থ্য সচেতনতা: বাংলাদেশ বনাম আন্তর্জাতিক</h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6">
+              Current Health Awareness: Bangladesh vs International
+            </h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-4xl mx-auto">
               Compare health awareness metrics between Bangladesh and international standards
             </p>
           </motion.div>
 
-          <Card className="max-w-6xl mx-auto">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                <BarChart3 className="w-5 h-5" />
+          <Card className="max-w-7xl mx-auto shadow-xl border-border/50">
+            <CardHeader className="pb-6">
+              <CardTitle className="flex items-center gap-3 text-xl sm:text-2xl">
+                <BarChart3 className="w-6 h-6 sm:w-7 sm:h-7 text-primary" />
                 Health Awareness Comparison
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="h-64 sm:h-80 lg:h-96">
+            <CardContent className="p-4 sm:p-6 lg:p-8">
+              <div className="h-80 sm:h-96">
                 <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={healthAwarenessData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="metric" fontSize={12} interval={0} angle={-45} textAnchor="end" height={80} />
-                    <YAxis fontSize={12} />
-                    <Tooltip />
+                  <BarChart data={healthAwarenessData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
+                    <XAxis
+                      dataKey="metric"
+                      fontSize={12}
+                      interval={0}
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      className="text-muted-foreground"
+                    />
+                    <YAxis fontSize={12} className="text-muted-foreground" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "hsl(var(--card))",
+                        border: "1px solid hsl(var(--border))",
+                        borderRadius: "8px",
+                      }}
+                    />
                     <Legend />
-                    <Bar dataKey="Bangladesh" fill="#dc2626" name="Bangladesh" />
-                    <Bar dataKey="International" fill="#f59e0b" name="International" />
+                    <Bar dataKey="Bangladesh" fill="hsl(var(--primary))" name="Bangladesh" radius={[4, 4, 0, 0]} />
+                    <Bar
+                      dataKey="International"
+                      fill="hsl(var(--secondary))"
+                      name="International"
+                      radius={[4, 4, 0, 0]}
+                    />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
             </CardContent>
           </Card>
-
-          {/* CTA Band */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            viewport={{ once: true }}
-            className="mt-16 relative overflow-hidden rounded-3xl"
-          >
-            <div
-              className="absolute inset-0 bg-cover bg-center"
-              style={{ backgroundImage: `url(/placeholder.svg?height=200&width=1200&query=fitness+motivation+banner)` }}
-            />
-            <div className="absolute inset-0 bg-gradient-to-r from-primary/90 to-secondary/90" />
-            <div className="relative z-10 text-center py-16 px-8 text-white">
-              <h3 className="text-3xl font-bold mb-4">Ready to Improve Your Health?</h3>
-              <p className="text-xl mb-8 opacity-90">Join thousands who have transformed their lifestyle</p>
-              <Link href="/login">
-                <Button size="lg" variant="secondary" className="group">
-                  Join with us
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
-                </Button>
-              </Link>
-            </div>
-          </motion.div>
         </div>
       </section>
 
-      {/* Personalized Daily Targets - Enhanced with feet/inches option */}
-      <section className="py-12 sm:py-16 lg:py-20 bg-muted/30">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Personalized Daily Targets */}
+      <section className="py-16 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 lg:mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Personalized Daily Targets</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">Personalized Daily Targets</h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
               Get customized daily recommendations based on your profile
             </p>
           </motion.div>
 
-          <Card className="max-w-2xl mx-auto">
+          <Card className="max-w-2xl mx-auto border-border/50">
             <CardHeader>
-              <CardTitle className="text-lg sm:text-xl">Calculate Your Daily Targets</CardTitle>
-              <CardDescription>Enter your details to get personalized recommendations</CardDescription>
+              <CardTitle className="text-xl sm:text-2xl">Calculate Your Daily Targets</CardTitle>
+              <CardDescription className="text-sm sm:text-base">
+                Enter your details to get personalized recommendations
+              </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="p-4 sm:p-6">
               <div className="space-y-4">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Gender</Label>
+                    <Label className="text-sm font-medium mb-2 block">Gender</Label>
                     <Select
                       value={targetsForm.gender}
                       onValueChange={(value: "male" | "female") => setTargetsForm({ ...targetsForm, gender: value })}
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -678,10 +514,11 @@ export default function HomePage() {
                     </Select>
                   </div>
                   <div>
-                    <Label>Age</Label>
+                    <Label className="text-sm font-medium mb-2 block">Age</Label>
                     <Input
                       type="number"
                       placeholder="Age"
+                      className="border-border"
                       value={targetsForm.age}
                       onChange={(e) => setTargetsForm({ ...targetsForm, age: e.target.value })}
                     />
@@ -689,14 +526,14 @@ export default function HomePage() {
                 </div>
 
                 <div>
-                  <Label>Height Unit</Label>
+                  <Label className="text-sm font-medium mb-2 block">Height Unit</Label>
                   <Select
                     value={targetsForm.unit}
                     onValueChange={(value: "cm" | "ft") =>
                       setTargetsForm({ ...targetsForm, unit: value, height: "", heightFeet: "", heightInches: "" })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="border-border">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -708,10 +545,11 @@ export default function HomePage() {
 
                 {targetsForm.unit === "cm" ? (
                   <div>
-                    <Label>Height (cm)</Label>
+                    <Label className="text-sm font-medium mb-2 block">Height (cm)</Label>
                     <Input
                       type="number"
                       placeholder="Height in cm"
+                      className="border-border"
                       value={targetsForm.height}
                       onChange={(e) => setTargetsForm({ ...targetsForm, height: e.target.value })}
                     />
@@ -719,19 +557,21 @@ export default function HomePage() {
                 ) : (
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <Label>Feet</Label>
+                      <Label className="text-sm font-medium mb-2 block">Feet</Label>
                       <Input
                         type="number"
                         placeholder="Feet"
+                        className="border-border"
                         value={targetsForm.heightFeet}
                         onChange={(e) => setTargetsForm({ ...targetsForm, heightFeet: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label>Inches</Label>
+                      <Label className="text-sm font-medium mb-2 block">Inches</Label>
                       <Input
                         type="number"
                         placeholder="Inches"
+                        className="border-border"
                         value={targetsForm.heightInches}
                         onChange={(e) => setTargetsForm({ ...targetsForm, heightInches: e.target.value })}
                       />
@@ -741,23 +581,24 @@ export default function HomePage() {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label>Weight (kg)</Label>
+                    <Label className="text-sm font-medium mb-2 block">Weight (kg)</Label>
                     <Input
                       type="number"
                       placeholder="Weight"
+                      className="border-border"
                       value={targetsForm.weight}
                       onChange={(e) => setTargetsForm({ ...targetsForm, weight: e.target.value })}
                     />
                   </div>
                   <div>
-                    <Label>Activity Level</Label>
+                    <Label className="text-sm font-medium mb-2 block">Activity Level</Label>
                     <Select
                       value={targetsForm.activity}
                       onValueChange={(value: "low" | "med" | "high") =>
                         setTargetsForm({ ...targetsForm, activity: value })
                       }
                     >
-                      <SelectTrigger>
+                      <SelectTrigger className="border-border">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -777,11 +618,11 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Enhanced Daily Targets Modal */}
+      {/* Daily Targets Modal */}
       <Dialog open={is_targets_modal_open} onOpenChange={() => dispatch(toggle_targets_modal())}>
-        <DialogContent className="max-w-md mx-4 sm:mx-auto">
+        <DialogContent className="max-w-md border-border/50">
           <DialogHeader>
-            <DialogTitle className="text-lg sm:text-xl">Your Daily Targets</DialogTitle>
+            <DialogTitle className="text-xl">Your Daily Targets</DialogTitle>
             <DialogDescription>Personalized recommendations for optimal health</DialogDescription>
           </DialogHeader>
           {dailyTargets && (
@@ -793,12 +634,12 @@ export default function HomePage() {
                   <div
                     className={`text-sm font-medium ${
                       dailyTargets.bmiCategory === "Normal"
-                        ? "text-green-600"
+                        ? "text-green-600 dark:text-green-400"
                         : dailyTargets.bmiCategory === "Underweight"
-                          ? "text-blue-600"
+                          ? "text-blue-600 dark:text-blue-400"
                           : dailyTargets.bmiCategory === "Overweight"
-                            ? "text-orange-600"
-                            : "text-red-600"
+                            ? "text-orange-600 dark:text-orange-400"
+                            : "text-red-600 dark:text-red-400"
                     }`}
                   >
                     {dailyTargets.bmiCategory}
@@ -848,82 +689,26 @@ export default function HomePage() {
         </DialogContent>
       </Dialog>
 
-      {/* Health Tips Ring - Enhanced responsiveness */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-12 lg:mb-16"
-          >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Daily Health Tips</h2>
-            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Essential tips for maintaining a healthy lifestyle
-            </p>
-          </motion.div>
-
-          <div className="relative max-w-4xl mx-auto">
-            {/* Center Image */}
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-10">
-              <motion.div
-                animate={{ rotate: 360 }}
-                transition={{ duration: 20, repeat: Number.POSITIVE_INFINITY, ease: "linear" }}
-                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-primary/20"
-              >
-                <img src="/healthy-lifestyle-icon.png" alt="Health Center" className="w-full h-full object-cover" />
-              </motion.div>
-            </div>
-
-            {/* Tips Ring - Responsive layout */}
-            <div className="relative w-full aspect-square max-w-2xl mx-auto">
-              {healthTips.map((tip, index) => {
-                const angle = (index * 360) / healthTips.length
-                const radius = window.innerWidth < 640 ? 35 : 45 // Smaller radius on mobile
-                const x = 50 + radius * Math.cos(((angle - 90) * Math.PI) / 180)
-                const y = 50 + radius * Math.sin(((angle - 90) * Math.PI) / 180)
-
-                return (
-                  <motion.div
-                    key={index}
-                    initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                    whileHover={{ scale: 1.1, y: -5 }}
-                    className="absolute transform -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: `${x}%`, top: `${y}%` }}
-                  >
-                    <Card className="w-36 sm:w-48 p-3 sm:p-4 text-center hover:shadow-lg transition-all duration-300">
-                      <tip.icon className={`w-6 h-6 sm:w-8 sm:h-8 mx-auto mb-2 ${tip.color}`} />
-                      <p className="text-xs sm:text-sm font-medium">{tip.tip}</p>
-                    </Card>
-                  </motion.div>
-                )
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
+      {/* Health Tips Section */}
+      <HealthTipsSection />
 
       {/* Features Section */}
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      <section className="py-16 sm:py-20 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-16 sm:mb-20"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Why Choose FitSync?</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Experience the future of fitness with our cutting-edge platform designed for your success
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8">Why Choose FitSync?</h2>
+            <p className="text-lg sm:text-2xl text-muted-foreground max-w-4xl mx-auto">
+              Experience the future of fitness with our cutting-edge platform
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
@@ -931,17 +716,19 @@ export default function HomePage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -5 }}
+                whileHover={{ y: -8 }}
               >
-                <Card className="h-full hover:shadow-lg transition-all duration-300">
-                  <CardHeader>
-                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-4 ${feature.color}`}>
-                      <feature.icon className="h-6 w-6" />
+                <Card className="h-full hover:shadow-xl transition-all duration-300 p-2 border-border/50">
+                  <CardHeader className="pb-4">
+                    <div
+                      className={`w-14 h-14 sm:w-16 sm:h-16 rounded-2xl flex items-center justify-center mb-4 sm:mb-6 ${feature.color}`}
+                    >
+                      <feature.icon className="h-7 w-7 sm:h-8 sm:w-8" />
                     </div>
-                    <CardTitle className="text-xl">{feature.title}</CardTitle>
+                    <CardTitle className="text-lg sm:text-2xl font-bold">{feature.title}</CardTitle>
                   </CardHeader>
-                  <CardContent>
-                    <CardDescription className="text-base">{feature.description}</CardDescription>
+                  <CardContent className="pt-0">
+                    <CardDescription className="text-sm sm:text-lg">{feature.description}</CardDescription>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -950,57 +737,60 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Contact Form - Enhanced responsiveness */}
-      <section className="py-12 sm:py-16 lg:py-20">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Contact Form */}
+      <section className="py-16">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-12 lg:mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">Get In Touch</h2>
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4 sm:mb-6">Get In Touch</h2>
             <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
-              Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              Have questions? We'd love to hear from you.
             </p>
           </motion.div>
 
           <div className="max-w-2xl mx-auto">
-            <Card>
+            <Card className="border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                <CardTitle className="flex items-center gap-2 text-xl">
                   <Mail className="w-5 h-5" />
                   Contact Us
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-4 sm:p-6">
                 <form onSubmit={handleContactSubmit} className="space-y-4">
                   <div className="grid sm:grid-cols-2 gap-4">
                     <div>
-                      <Label>Name</Label>
+                      <Label className="text-sm font-medium mb-2 block">Name</Label>
                       <Input
                         type="text"
                         placeholder="Your name"
+                        className="border-border"
                         value={contactForm.name}
                         onChange={(e) => setContactForm({ ...contactForm, name: e.target.value })}
                       />
                     </div>
                     <div>
-                      <Label>Email</Label>
+                      <Label className="text-sm font-medium mb-2 block">Email</Label>
                       <Input
                         type="email"
                         placeholder="your@email.com"
+                        className="border-border"
                         value={contactForm.email}
                         onChange={(e) => setContactForm({ ...contactForm, email: e.target.value })}
                       />
                     </div>
                   </div>
                   <div>
-                    <Label>Message</Label>
+                    <Label className="text-sm font-medium mb-2 block">Message</Label>
                     <Textarea
                       placeholder="Your message..."
                       rows={4}
+                      className="border-border"
                       value={contactForm.message}
                       onChange={(e) => setContactForm({ ...contactForm, message: e.target.value })}
                     />
@@ -1015,84 +805,82 @@ export default function HomePage() {
         </div>
       </section>
 
-      <section className="py-20 bg-muted/30">
-        <div className="container mx-auto px-4">
+      {/* Map & Address */}
+      <section className="py-16 sm:py-20 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-12 sm:mb-16"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Visit Our Location</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Visit Our Location</h2>
+            <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto">
               Find us at our convenient location in Magura, Bangladesh
             </p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-2 gap-12 max-w-6xl mx-auto">
-            {/* Map */}
+          <div className="grid lg:grid-cols-2 gap-8 sm:gap-12 max-w-6xl mx-auto">
             <motion.div
               initial={{ opacity: 0, x: -50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="relative h-96 rounded-2xl overflow-hidden"
+              className="relative h-80 sm:h-96 rounded-2xl overflow-hidden"
             >
               <img
                 src="/bangladesh-map-location-magura.png"
                 alt="Location Map"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent" />
             </motion.div>
 
-            {/* Address Info */}
             <motion.div
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className="space-y-8"
+              className="space-y-6 sm:space-y-8"
             >
-              <Card>
+              <Card className="border-border/50">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 text-xl">
                     <MapPin className="w-5 h-5" />
                     Our Address
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-lg font-medium mb-2">স্টেডিয়ামপাড়া, মাগুরা সদর</p>
-                  <p className="text-lg font-medium mb-4">মাগুরা, বাংলাদেশ</p>
+                  <p className="text-base sm:text-lg font-medium mb-2">স্টেডিয়ামপাড়া, মাগুরা সদর</p>
+                  <p className="text-base sm:text-lg font-medium mb-4">মাগুরা, বাংলাদেশ</p>
                   <div className="space-y-3">
                     <div className="flex items-center gap-3">
                       <Phone className="w-5 h-5 text-primary" />
-                      <span className="text-lg">01922545444</span>
+                      <span className="text-base sm:text-lg">01922545444</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Mail className="w-5 h-5 text-primary" />
-                      <span className="text-lg">info@fitsync.bd</span>
+                      <span className="text-base sm:text-lg">info@fitsync.bd</span>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-border/50">
                 <CardHeader>
-                  <CardTitle>Opening Hours</CardTitle>
+                  <CardTitle className="text-xl">Opening Hours</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm sm:text-base">
                       <span>Monday - Friday</span>
                       <span className="font-medium">6:00 AM - 10:00 PM</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm sm:text-base">
                       <span>Saturday</span>
                       <span className="font-medium">7:00 AM - 9:00 PM</span>
                     </div>
-                    <div className="flex justify-between">
+                    <div className="flex justify-between text-sm sm:text-base">
                       <span>Sunday</span>
                       <span className="font-medium">8:00 AM - 8:00 PM</span>
                     </div>
@@ -1105,35 +893,42 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
+      <section className="py-16 sm:py-20">
+        <div className="container mx-auto px-4 sm:px-6">
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
             viewport={{ once: true }}
-            className="bg-gradient-to-r from-primary to-secondary rounded-3xl p-12 text-center text-white"
+            className="bg-gradient-to-r from-primary to-secondary rounded-3xl p-8 sm:p-16 text-center text-white shadow-2xl"
           >
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Ready to Start Your Fitness Journey?</h2>
-            <p className="text-xl opacity-90 mb-8 max-w-2xl mx-auto">
-              Join thousands of satisfied members who have transformed their lives with FitSync. Your fitness goals are
-              just one click away.
+            <h2 className="text-3xl sm:text-4xl font-bold mb-6 sm:mb-8">Ready to Start Your Fitness Journey?</h2>
+            <p className="text-lg sm:text-2xl opacity-90 mb-8 sm:mb-12 max-w-4xl mx-auto">
+              Join thousands of satisfied members who have transformed their lives with FitSync.
             </p>
             {is_authenticated ? (
-              <div className="space-y-4">
-                <p className="text-lg">Welcome back, {user?.name}!</p>
+              <div className="space-y-4 sm:space-y-6">
+                <p className="text-xl sm:text-2xl">Welcome back, {loginuser?.name || user?.name}!</p>
                 <Link href="/all-schedule">
-                  <Button size="lg" variant="secondary" className="group">
+                  <Button
+                    size="lg"
+                    variant="secondary"
+                    className="group px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold"
+                  >
                     View Your Schedules
-                    <Calendar className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                    <Calendar className="ml-2 sm:ml-3 h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
                   </Button>
                 </Link>
               </div>
             ) : (
               <Link href="/login">
-                <Button size="lg" variant="secondary" className="group">
+                <Button
+                  size="lg"
+                  variant="secondary"
+                  className="group px-6 sm:px-8 py-3 sm:py-4 text-base sm:text-lg font-semibold"
+                >
                   Join FitSync Today
-                  <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  <ArrowRight className="ml-2 sm:ml-3 h-4 w-4 sm:h-5 sm:w-5 transition-transform group-hover:translate-x-1" />
                 </Button>
               </Link>
             )}

@@ -10,18 +10,12 @@ const initial_state: AuthState = {
   refresh_token: null,
   is_authenticated: false,
   is_loading: false,
+  loginuser: null,
 }
-
-// TODO: Replace with actual API endpoints when backend is ready
-// API Endpoints to implement:
-// POST ${config.api_base_url}/auth/login
-// POST ${config.api_base_url}/auth/register
-// POST ${config.api_base_url}/auth/logout
-// POST ${config.api_base_url}/auth/refresh
 
 export const login = createAsyncThunk("auth/login", async (credentials: LoginCredentials) => {
   try {
-    // TODO: Replace with actual API call
+    // Replace with actual API call
     // const response = await fetch(`${config.api_base_url}/auth/login`, {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
@@ -51,7 +45,7 @@ export const login = createAsyncThunk("auth/login", async (credentials: LoginCre
 
 export const register = createAsyncThunk("auth/register", async (data: RegisterData) => {
   try {
-    // TODO: Replace with actual API call
+    // Replace with actual API call
     // const response = await fetch(`${config.api_base_url}/auth/register`, {
     //   method: 'POST',
     //   headers: { 'Content-Type': 'application/json' },
@@ -80,7 +74,7 @@ export const register = createAsyncThunk("auth/register", async (data: RegisterD
 
 export const logout = createAsyncThunk("auth/logout", async () => {
   try {
-    // TODO: Replace with actual API call
+    // Replace with actual API call
     // await fetch(`${config.api_base_url}/auth/logout`, {
     //   method: 'POST',
     //   headers: { 'Authorization': `Bearer ${access_token}` }
@@ -90,8 +84,10 @@ export const logout = createAsyncThunk("auth/logout", async () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("access_token")
       localStorage.removeItem("refresh_token")
+      localStorage.removeItem("user")
       document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
       document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+      localStorage.removeItem("loginuser")
     }
   } catch (error) {
     console.error("Logout error:", error)
@@ -107,12 +103,14 @@ const authSlice = createSlice({
         const access_token = localStorage.getItem("access_token")
         const refresh_token = localStorage.getItem("refresh_token")
         const user_data = localStorage.getItem("user")
+        const loginuser_data = localStorage.getItem("loginuser")
 
         if (access_token && refresh_token && user_data) {
           state.access_token = access_token
           state.refresh_token = refresh_token
           state.user = JSON.parse(user_data)
           state.is_authenticated = true
+          state.loginuser = loginuser_data ? JSON.parse(loginuser_data) : null
         }
       }
     },
@@ -121,18 +119,27 @@ const authSlice = createSlice({
       state.access_token = null
       state.refresh_token = null
       state.is_authenticated = false
+      state.loginuser = null
     },
     switch_user: (state, action: PayloadAction<User>) => {
       state.user = action.payload
       state.access_token = "mock_access_token_" + action.payload.id
       state.refresh_token = "mock_refresh_token_" + action.payload.id
       state.is_authenticated = true
+      state.loginuser = { name: action.payload.name }
 
       // Update storage
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token", state.access_token)
         localStorage.setItem("refresh_token", state.refresh_token)
         localStorage.setItem("user", JSON.stringify(action.payload))
+        localStorage.setItem("loginuser", JSON.stringify({ name: action.payload.name }))
+      }
+    },
+    set_loginuser: (state, action: PayloadAction<{ name: string }>) => {
+      state.loginuser = action.payload
+      if (typeof window !== "undefined") {
+        localStorage.setItem("loginuser", JSON.stringify(action.payload))
       }
     },
   },
@@ -147,12 +154,14 @@ const authSlice = createSlice({
         state.access_token = action.payload.access_token
         state.refresh_token = action.payload.refresh_token
         state.is_authenticated = true
+        state.loginuser = { name: action.payload.user.name }
 
         // Store in localStorage and cookies
         if (typeof window !== "undefined") {
           localStorage.setItem("access_token", action.payload.access_token)
           localStorage.setItem("refresh_token", action.payload.refresh_token)
           localStorage.setItem("user", JSON.stringify(action.payload.user))
+          localStorage.setItem("loginuser", JSON.stringify({ name: action.payload.user.name }))
           document.cookie = `access_token=${action.payload.access_token}; path=/`
           document.cookie = `refresh_token=${action.payload.refresh_token}; path=/`
         }
@@ -169,12 +178,14 @@ const authSlice = createSlice({
         state.access_token = action.payload.access_token
         state.refresh_token = action.payload.refresh_token
         state.is_authenticated = true
+        state.loginuser = { name: action.payload.user.name }
 
         // Store in localStorage and cookies
         if (typeof window !== "undefined") {
           localStorage.setItem("access_token", action.payload.access_token)
           localStorage.setItem("refresh_token", action.payload.refresh_token)
           localStorage.setItem("user", JSON.stringify(action.payload.user))
+          localStorage.setItem("loginuser", JSON.stringify({ name: action.payload.user.name }))
           document.cookie = `access_token=${action.payload.access_token}; path=/`
           document.cookie = `refresh_token=${action.payload.refresh_token}; path=/`
         }
@@ -187,9 +198,10 @@ const authSlice = createSlice({
         state.access_token = null
         state.refresh_token = null
         state.is_authenticated = false
+        state.loginuser = null
       })
   },
 })
 
-export const { hydrate_from_storage, clear_auth, switch_user } = authSlice.actions
+export const { hydrate_from_storage, clear_auth, switch_user, set_loginuser } = authSlice.actions
 export default authSlice.reducer

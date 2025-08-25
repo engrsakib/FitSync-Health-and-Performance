@@ -16,6 +16,7 @@ export interface AuthState {
   refresh_token: string | null
   is_authenticated: boolean
   is_loading: boolean
+  loginuser: { name: string } | null
 }
 
 export interface LoginCredentials {
