@@ -13,84 +13,96 @@ const initial_state: AuthState = {
   loginuser: null,
 }
 
-export const login = createAsyncThunk("auth/login", async (credentials: LoginCredentials) => {
+// Login thunk: POST /api/v1/auth/login
+export const login = createAsyncThunk("auth/login", async (credentials: LoginCredentials, { rejectWithValue }) => {
   try {
-    // Replace with actual API call
-    // const response = await fetch(`${config.api_base_url}/auth/login`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(credentials)
-    // })
-    // const data = await response.json()
+    const response = await fetch(`${config.api_base_url}/api/v1/auth/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: credentials.email,
+        password: credentials.password,
+      }),
+    })
+    if (!response.ok) {
+      const error = await response.json()
+      return rejectWithValue(error)
+    }
+    const result = await response.json()
+    // Pick out the fields from backend response
+    const user = result.data.user
+    const access_token = result.data.acccessToken
+    const refresh_token = result.data.refreshToken
 
-    // Mock implementation - remove when API is ready
-    const mock_user = config.mock_users.find(
-      (u) => u.email === credentials.email && u.password === credentials.password,
-    )
-
-    if (!mock_user) {
-      throw new Error("Invalid credentials")
+    // Set in localStorage immediately (for SSR hydration)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("access_token", access_token)
+      localStorage.setItem("refresh_token", refresh_token)
+      localStorage.setItem("user", JSON.stringify(user))
+      localStorage.setItem("loginuser", JSON.stringify({ name: user.name }))
+      document.cookie = `access_token=${access_token}; path=/`
+      document.cookie = `refresh_token=${refresh_token}; path=/`
     }
 
-    const { password, ...user } = mock_user
     return {
       user,
-      access_token: "mock_access_token_" + user.id,
-      refresh_token: "mock_refresh_token_" + user.id,
+      access_token,
+      refresh_token,
     }
   } catch (error) {
-    throw error
+    return rejectWithValue(error)
   }
 })
 
-export const register = createAsyncThunk("auth/register", async (data: RegisterData) => {
+// Register thunk: POST /api/v1/users/register (you can adjust as needed)
+export const register = createAsyncThunk("auth/register", async (data: RegisterData, { rejectWithValue }) => {
   try {
-    // Replace with actual API call
-    // const response = await fetch(`${config.api_base_url}/auth/register`, {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(data)
-    // })
-    // const result = await response.json()
+    const response = await fetch(`${config.api_base_url}/api/v1/users/register`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: data.email,
+        password: data.password,
+        name: data.name,
+      }),
+    })
+    if (!response.ok) {
+      const error = await response.json()
+      return rejectWithValue(error)
+    }
+    const result = await response.json()
+    // You may need to adjust based on backend response
+    const user = result.data.user
+    const access_token = result.data.acccessToken
+    const refresh_token = result.data.refreshToken
 
-    // Mock implementation - remove when API is ready
-    const new_user: User = {
-      id: Date.now().toString(),
-      name: data.name,
-      email: data.email,
-      role: data.role,
-      avatar: data.avatar || config.default_avatar,
+    if (typeof window !== "undefined") {
+      localStorage.setItem("access_token", access_token)
+      localStorage.setItem("refresh_token", refresh_token)
+      localStorage.setItem("user", JSON.stringify(user))
+      localStorage.setItem("loginuser", JSON.stringify({ name: user.name }))
+      document.cookie = `access_token=${access_token}; path=/`
+      document.cookie = `refresh_token=${refresh_token}; path=/`
     }
 
     return {
-      user: new_user,
-      access_token: "mock_access_token_" + new_user.id,
-      refresh_token: "mock_refresh_token_" + new_user.id,
+      user,
+      access_token,
+      refresh_token,
     }
   } catch (error) {
-    throw error
+    return rejectWithValue(error)
   }
 })
 
 export const logout = createAsyncThunk("auth/logout", async () => {
-  try {
-    // Replace with actual API call
-    // await fetch(`${config.api_base_url}/auth/logout`, {
-    //   method: 'POST',
-    //   headers: { 'Authorization': `Bearer ${access_token}` }
-    // })
-
-    // Clear storage
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("access_token")
-      localStorage.removeItem("refresh_token")
-      localStorage.removeItem("user")
-      document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-      document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
-      localStorage.removeItem("loginuser")
-    }
-  } catch (error) {
-    console.error("Logout error:", error)
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("access_token")
+    localStorage.removeItem("refresh_token")
+    localStorage.removeItem("user")
+    localStorage.removeItem("loginuser")
+    document.cookie = "access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
+    document.cookie = "refresh_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;"
   }
 })
 
@@ -104,7 +116,6 @@ const authSlice = createSlice({
         const refresh_token = localStorage.getItem("refresh_token")
         const user_data = localStorage.getItem("user")
         const loginuser_data = localStorage.getItem("loginuser")
-
         if (access_token && refresh_token && user_data) {
           state.access_token = access_token
           state.refresh_token = refresh_token
@@ -127,8 +138,6 @@ const authSlice = createSlice({
       state.refresh_token = "mock_refresh_token_" + action.payload.id
       state.is_authenticated = true
       state.loginuser = { name: action.payload.name }
-
-      // Update storage
       if (typeof window !== "undefined") {
         localStorage.setItem("access_token", state.access_token)
         localStorage.setItem("refresh_token", state.refresh_token)
@@ -155,16 +164,6 @@ const authSlice = createSlice({
         state.refresh_token = action.payload.refresh_token
         state.is_authenticated = true
         state.loginuser = { name: action.payload.user.name }
-
-        // Store in localStorage and cookies
-        if (typeof window !== "undefined") {
-          localStorage.setItem("access_token", action.payload.access_token)
-          localStorage.setItem("refresh_token", action.payload.refresh_token)
-          localStorage.setItem("user", JSON.stringify(action.payload.user))
-          localStorage.setItem("loginuser", JSON.stringify({ name: action.payload.user.name }))
-          document.cookie = `access_token=${action.payload.access_token}; path=/`
-          document.cookie = `refresh_token=${action.payload.refresh_token}; path=/`
-        }
       })
       .addCase(login.rejected, (state) => {
         state.is_loading = false
@@ -179,16 +178,6 @@ const authSlice = createSlice({
         state.refresh_token = action.payload.refresh_token
         state.is_authenticated = true
         state.loginuser = { name: action.payload.user.name }
-
-        // Store in localStorage and cookies
-        if (typeof window !== "undefined") {
-          localStorage.setItem("access_token", action.payload.access_token)
-          localStorage.setItem("refresh_token", action.payload.refresh_token)
-          localStorage.setItem("user", JSON.stringify(action.payload.user))
-          localStorage.setItem("loginuser", JSON.stringify({ name: action.payload.user.name }))
-          document.cookie = `access_token=${action.payload.access_token}; path=/`
-          document.cookie = `refresh_token=${action.payload.refresh_token}; path=/`
-        }
       })
       .addCase(register.rejected, (state) => {
         state.is_loading = false
