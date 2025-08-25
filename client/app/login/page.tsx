@@ -71,7 +71,7 @@ export default function LoginPage() {
   const demoUsers = [
     { email: "sakib@gamil.com", password: "1445uIoG@", role: "Admin" },
     { email: "bushra@gmail.com", password: "1445uIoG@", role: "Trainer" },
-    { email: "trainee@fitsync.dev", password: "Trainee@123", role: "Trainee" },
+    { email: "humayra@gmail.com", password: "1445uIoG@", role: "Trainee" },
   ]
 
   const fillDemoCredentials = (email: string, password: string) => {
