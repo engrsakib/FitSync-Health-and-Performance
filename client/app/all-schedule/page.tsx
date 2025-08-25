@@ -17,7 +17,6 @@ import { useAppDispatch, useAppSelector } from "@/src/redux/store"
 import { fetch_schedules } from "@/src/redux/slices/data_slice"
 import { config } from "@/src/lib/config"
 
-// 3D Animated Octahedron Component
 function AnimatedOctahedron() {
   return (
     <Octahedron args={[1]} scale={1.5}>
@@ -40,7 +39,6 @@ type MessageModalProps = {
   message: string
   onClose: () => void
 }
-
 function MessageModal({ open, type, message, onClose }: MessageModalProps) {
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -155,6 +153,12 @@ function BookingModal({ open, onClose, scheduleId, traineeId, onBooked, showMess
   )
 }
 
+// Helper function to get trainee name by id from users in redux (if available)
+function getTraineeName(traineeId: string, users: any[]): string {
+  const found = users?.find((u) => u?.id === traineeId || u?._id === traineeId)
+  return found?.name ? found.name : "Annonimus Trinynar"
+}
+
 export default function AllSchedulePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
@@ -164,7 +168,7 @@ export default function AllSchedulePage() {
   const [messageType, setMessageType] = useState<"success" | "error">("success")
   const [messageText, setMessageText] = useState("")
   const dispatch = useAppDispatch()
-  const { schedules, is_loading } = useAppSelector((state) => state.data)
+  const { schedules, is_loading, users } = useAppSelector((state) => state.data)
   const { user } = useAppSelector((state) => state.auth)
 
   useEffect(() => {
@@ -176,7 +180,9 @@ export default function AllSchedulePage() {
     id: s._id,
     title: s.title,
     description: s.description,
-    trainer_name: s.createdBy, // You can fetch trainer info if needed
+    trainer_name: s?.trainer?.name
+      || s.trainer_name
+      || "Anonymous Trainer",
     date: s.classDate,
     start_time: s.startTime,
     end_time: s.endTime,
@@ -185,9 +191,15 @@ export default function AllSchedulePage() {
       : s.isCompleted ? "completed"
       : s.status,
     capacity: s.maxTrainees,
-    booked: s.trainees?.length ?? 0,
+    booked: Array.isArray(s.trainees) ? s.trainees.length : 0,
     isFull: s.isFull,
     raw: s,
+    userBookingId: user?.role === "TRAINEE" && Array.isArray(s.bookings)
+      ? s.bookings.find((b: any) => b.trainee === user.id)?._id
+      : null,
+    traineeNames: Array.isArray(s.trainees)
+      ? s.trainees.map((tid: string) => getTraineeName(tid, users || []))
+      : [],
   }))
 
   const filteredSchedules = mappedSchedules.filter((schedule) => {
@@ -235,6 +247,33 @@ export default function AllSchedulePage() {
   const closeMessageModal = () => {
     setMessageModalOpen(false)
     setMessageText("")
+  }
+
+  // Cancel booking
+  const handleCancelBooking = async (bookingId: string) => {
+    const token =
+      typeof window !== "undefined"
+        ? localStorage.getItem("acccessToken") ||
+          localStorage.getItem("access_token") ||
+          ""
+        : ""
+    try {
+      const res = await fetch(`${config.api_base_url}/api/v1/booking/${bookingId}`, {
+        method: "PATCH",
+        headers: {
+          Authorization: `${token}`,
+        },
+      })
+      const result = await res.json()
+      if (res.ok && result.success) {
+        showMessage("success", "Booking cancelled!")
+        dispatch(fetch_schedules())
+      } else {
+        showMessage("error", result.message || "Cancel booking failed!")
+      }
+    } catch (e) {
+      showMessage("error", "Cancel booking failed!")
+    }
   }
 
   // Find selected schedule for booking modal
@@ -353,7 +392,7 @@ export default function AllSchedulePage() {
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Star className="h-4 w-4" />
                         <span>
-                          Trainer: {schedule.trainer_name || "N/A"}
+                          Trainer: {schedule.trainer_name || "Unknown Trainer"}
                         </span>
                       </div>
                       <div className="flex items-center space-x-2 text-sm">
@@ -362,18 +401,39 @@ export default function AllSchedulePage() {
                           {schedule.booked}/{schedule.capacity} spots filled
                         </span>
                       </div>
+                      {/* Trainee names list */}
+                      {schedule.traineeNames?.length > 0 && (
+                        <div className="text-xs text-muted-foreground mt-2">
+                          <span className="font-semibold">Trainees: </span>
+                          {schedule.traineeNames.map((tn: string, i: number) => (
+                            <span key={i} className="mr-2">
+                              {tn}
+                            </span>
+                          ))}
+                        </div>
+                      )}
                     </div>
 
                     {user?.role === "TRAINEE" && schedule.status === "active" && (
-                      <Button
-                        className="w-full"
-                        disabled={schedule.booked >= schedule.capacity || schedule.isFull}
-                        onClick={() => openBookingModal(schedule.id)}
-                      >
-                        {schedule.booked >= schedule.capacity || schedule.isFull
-                          ? "Fully Booked"
-                          : "Book Now"}
-                      </Button>
+                      schedule.userBookingId ? (
+                        <Button
+                          className="w-full"
+                          variant="destructive"
+                          onClick={() => handleCancelBooking(schedule.userBookingId)}
+                        >
+                          Cancel Booking
+                        </Button>
+                      ) : (
+                        <Button
+                          className="w-full"
+                          disabled={schedule.booked >= schedule.capacity || schedule.isFull}
+                          onClick={() => openBookingModal(schedule.id)}
+                        >
+                          {schedule.booked >= schedule.capacity || schedule.isFull
+                            ? "Fully Booked"
+                            : "Book Now"}
+                        </Button>
+                      )
                     )}
                   </CardContent>
                 </Card>

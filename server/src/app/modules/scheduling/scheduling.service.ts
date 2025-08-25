@@ -108,9 +108,18 @@ export const updateSchedule = async (id: string, payload: Partial<ISchedule>) =>
 };
 
 const getAllSchedules = async () => {
-  const schedules = await Schedule.find();
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const schedules = await Schedule.find({
+    classDate: { $gte: today },
+  })
+    .populate("trainer", "name")
+    .sort({ classDate: 1 });
+
   return schedules;
 };
+
 
 const getSingleSchedule = async (slug: string) => {
   const schedule = await Schedule.findOne({ where: { slug } });
