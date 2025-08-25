@@ -101,8 +101,17 @@ const getAllUsers = async () => {
   return { users, userCount };
 };
 
+const getUserByRole = async (role: string) => {
+  const users = await User.find({ role });
+  if (!users || users.length === 0) {
+    throw new Error("No users found");
+  }
+  return users;
+};
+
 export const UserService = {
   createUser,
   getAllUsers,
   updateUser,
+  getUserByRole,
 };
