@@ -1,0 +1,18 @@
+{
+  "water_liters_per_kg": 0.033,
+  "sleep_by_age": {
+    "18-25": 7.5,
+    "26-40": 7.0,
+    "41-60": 7.0,
+    "60+": 6.5
+  },
+  "calorie_base_by_gender": {
+    "male": 1800,
+    "female": 1600
+  },
+  "activity_multipliers": {
+    "low": 1.2,
+    "med": 1.4,
+    "high": 1.6
+  }
+}
