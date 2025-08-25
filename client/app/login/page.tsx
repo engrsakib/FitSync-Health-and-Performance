@@ -69,8 +69,8 @@ export default function LoginPage() {
   }
 
   const demoUsers = [
-    { email: "admin@fitsync.dev", password: "Admin@123", role: "Admin" },
-    { email: "trainer@fitsync.dev", password: "Trainer@123", role: "Trainer" },
+    { email: "sakib@gamil.com", password: "1445uIoG@", role: "Admin" },
+    { email: "bushra@gmail.com", password: "1445uIoG@", role: "Trainer" },
     { email: "trainee@fitsync.dev", password: "Trainee@123", role: "Trainee" },
   ]
 

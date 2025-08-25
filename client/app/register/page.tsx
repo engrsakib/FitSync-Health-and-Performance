@@ -70,14 +70,14 @@ export default function RegisterPage() {
       return
     }
 
-    if (!formData.role) {
-      toast({
-        title: "Role Required",
-        description: "Please select your role.",
-        variant: "destructive",
-      })
-      return
-    }
+    // if (!formData.role) {
+    //   toast({
+    //     title: "Role Required",
+    //     description: "Please select your role.",
+    //     variant: "destructive",
+    //   })
+    //   return
+    // }
 
     setIsLoading(true)
 
@@ -174,7 +174,7 @@ export default function RegisterPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
+                {/* <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
                   <Select value={formData.role} onValueChange={(value: Role) => handleInputChange("role", value)}>
                     <SelectTrigger>
@@ -186,7 +186,7 @@ export default function RegisterPage() {
                       <SelectItem value="ADMIN">Admin</SelectItem>
                     </SelectContent>
                   </Select>
-                </div>
+                </div> */}
 
                 <div className="space-y-2">
                   <Label htmlFor="password">Password</Label>
