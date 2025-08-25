@@ -71,7 +71,7 @@ const getSingleBooking = async (id: string) => {
   return booking;
 };
 
-export const cancelBookings = async (id: string) => {
+const cancelBookings = async (id: string) => {
   const booking = await Booking.findById(id);
   if (!booking) {
     throw new Error("Booking not found");
@@ -85,10 +85,15 @@ export const cancelBookings = async (id: string) => {
   return booking;
 };
 
+const getBookingByTrainer = async (trainerId: string) => {
+  const bookings = await Booking.find({ trainer: trainerId });
+  return bookings;
+};
+
 export const BookingService = {
   createBooking,
   getAllBookings,
   getSingleBooking,
   cancelBookings,
-  
+  getBookingByTrainer,
 };

@@ -14,7 +14,7 @@ router.post(
 );
 router.get("/", BookingController.getAllSchedulings);
 router.get("/:id", BookingController.getSingleScheduling);
-
+router.get("/trainer/:trainerId", BookingController.getAllBookingsByTrainer);
 router.patch(
   "/:id",
   verifyToken(role.ADMIN),

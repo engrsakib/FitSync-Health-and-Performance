@@ -56,9 +56,23 @@ const cancelScheduling = async (req: Request, res: Response) => {
   }
 };
 
+const getAllBookingsByTrainer = async (req: Request, res: Response) => {
+  try {
+    const { trainerId } = req.params;
+    const bookings = await BookingService.getBookingByTrainer(trainerId);
+    res.status(httpStatus.OK).json({
+      message: "Bookings retrieved successfully",
+      data: bookings,
+    });
+  } catch (error) {
+    throw new AppError(`Failed to retrieve bookings: ${error}`, httpStatus.INTERNAL_SERVER_ERROR);
+  }
+};
+
 export const BookingController = {
   createScheduling,
   getAllSchedulings,
   getSingleScheduling,
+  getAllBookingsByTrainer,
   cancelScheduling,
 };

@@ -138,6 +138,9 @@ const deleteSchedules = async (id: string) => {
   return schedule;
 };
 
+
+
+
 export const ScheduleService = {
   createSchedule,
   getAllSchedules,

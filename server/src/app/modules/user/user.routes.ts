@@ -3,6 +3,7 @@ import { UserController } from "./user.controller";
 import { createUserZodSchema, updateUserZodSchema } from "./user.validations";
 import { validateRequest } from "../../middleware/validateRequest";
 import { verifyToken } from "../../util/verifyToken";
+import { role } from "./user.interface";
 
 const router = Router();
 
@@ -21,5 +22,11 @@ router.patch(
   verifyToken("ADMIN", "SUPPERADMIN", "USER"),
   UserController.updateUser,
 );
-  
+
+router.get(
+  "/role/:role",
+  verifyToken(role.ADMIN, role.TRAINEE, role.TRAINER),
+  UserController.getAllUsersByRole,
+);
+
 export const UserRoutes = router;

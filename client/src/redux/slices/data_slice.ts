@@ -60,11 +60,11 @@ export const fetch_schedules = createAsyncThunk("data/fetch_schedules", async (_
 export const fetch_trainers = createAsyncThunk("data/fetch_trainers", async (_, { rejectWithValue }) => {
   try {
     const token = getAccessToken()
-    const response = await fetch(`${config.api_base_url}/api/v1/trainers/`, {
+    const response = await fetch(`${config.api_base_url}/api/v1/users/role/TRAINER`, {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(token ? { Authorization: token } : {}),
       },
     })
     if (!response.ok) {

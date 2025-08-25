@@ -65,6 +65,23 @@ const getAllUsers = async (req: Request, res: Response) => {
   }
 };
 
+const getAllUsersByRole = async (req: Request, res: Response) => {
+  try {
+    const { role } = req.params;
+    const users = await UserService.getUserByRole(role);
+    sendResponse(res, {
+      success: true,
+      message: "Users retrieved successfully",
+      status: httpStatus.OK,
+      data: users,
+    });
+  } catch (error) {
+    console.log(error);
+    throw new AppError("Failed to retrieve users", httpStatus.INTERNAL_SERVER_ERROR);
+  }
+};  
+
+
 /**
  * UserController exports the methods to be used in routes.
  */
@@ -73,4 +90,5 @@ export const UserController = {
   createUser,
   getAllUsers,
   updateUser,
+  getAllUsersByRole,
 };
