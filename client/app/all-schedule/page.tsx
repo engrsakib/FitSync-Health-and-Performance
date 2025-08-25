@@ -5,14 +5,17 @@ import { motion } from "framer-motion"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Octahedron, MeshDistortMaterial } from "@react-three/drei"
 import { Suspense } from "react"
-import { Calendar, Clock, Users, Star, Filter, Search } from "lucide-react"
+import { Calendar, Clock, Users, Star, Filter, Search, XCircle, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { Label } from "@/components/ui/label"
 import { useAppDispatch, useAppSelector } from "@/src/redux/store"
 import { fetch_schedules } from "@/src/redux/slices/data_slice"
+import { config } from "@/src/lib/config"
 
 // 3D Animated Octahedron Component
 function AnimatedOctahedron() {
@@ -31,9 +34,135 @@ function SceneLoader() {
   )
 }
 
+type MessageModalProps = {
+  open: boolean
+  type: "success" | "error"
+  message: string
+  onClose: () => void
+}
+
+function MessageModal({ open, type, message, onClose }: MessageModalProps) {
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-xs mx-auto text-center">
+        <DialogHeader>
+          <DialogTitle className="flex flex-col items-center gap-2">
+            {type === "success" ? (
+              <CheckCircle className="w-10 h-10 text-green-600 mx-auto" />
+            ) : (
+              <XCircle className="w-10 h-10 text-red-600 mx-auto" />
+            )}
+            {type === "success" ? "Success!" : "Error"}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-2 text-lg">{message}</div>
+        <Button onClick={onClose} variant={type === "success" ? "default" : "destructive"} className="w-full mt-2">
+          Close
+        </Button>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+type BookingModalProps = {
+  open: boolean
+  onClose: () => void
+  scheduleId: string
+  traineeId: string
+  onBooked: () => void
+  showMessage: (type: "success" | "error", message: string) => void
+}
+
+function BookingModal({ open, onClose, scheduleId, traineeId, onBooked, showMessage }: BookingModalProps) {
+  const [bookingDate, setBookingDate] = useState("")
+  const [bookingTime, setBookingTime] = useState("")
+  const [loading, setLoading] = useState(false)
+
+  const handleBook = async () => {
+    if (!bookingDate || !bookingTime) {
+      showMessage("error", "Please select date and time")
+      return
+    }
+    setLoading(true)
+    try {
+      const dateIso = new Date(`${bookingDate}T${bookingTime}:00`).toISOString()
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("acccessToken") ||
+            localStorage.getItem("access_token") ||
+            ""
+          : ""
+      const res = await fetch(`${config.api_base_url}/api/v1/booking/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${token}`,
+        },
+        body: JSON.stringify({
+          schedule: scheduleId,
+          trainee: traineeId,
+          bookingDate: dateIso,
+        }),
+      })
+      const result = await res.json()
+      if (res.ok && result.success) {
+        setBookingDate("")
+        setBookingTime("")
+        setLoading(false)
+        onBooked()
+        onClose()
+        showMessage("success", "Booking successful!")
+      } else {
+        setLoading(false)
+        showMessage("error", result.message || "Booking failed!")
+      }
+    } catch (e) {
+      setLoading(false)
+      showMessage("error", "Booking failed!")
+    }
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-sm mx-auto">
+        <DialogHeader>
+          <DialogTitle>Book Schedule</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-4 mt-2">
+          <div>
+            <Label>Date</Label>
+            <Input
+              type="date"
+              value={bookingDate}
+              onChange={(e) => setBookingDate(e.target.value)}
+              min={new Date().toISOString().slice(0, 10)}
+            />
+          </div>
+          <div>
+            <Label>Time</Label>
+            <Input
+              type="time"
+              value={bookingTime}
+              onChange={(e) => setBookingTime(e.target.value)}
+            />
+          </div>
+          <Button onClick={handleBook} className="w-full mt-4" disabled={loading}>
+            {loading ? "Booking..." : "Confirm Booking"}
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function AllSchedulePage() {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
+  const [bookingModalOpen, setBookingModalOpen] = useState(false)
+  const [selectedScheduleId, setSelectedScheduleId] = useState<string | null>(null)
+  const [messageModalOpen, setMessageModalOpen] = useState(false)
+  const [messageType, setMessageType] = useState<"success" | "error">("success")
+  const [messageText, setMessageText] = useState("")
   const dispatch = useAppDispatch()
   const { schedules, is_loading } = useAppSelector((state) => state.data)
   const { user } = useAppSelector((state) => state.auth)
@@ -42,24 +171,39 @@ export default function AllSchedulePage() {
     dispatch(fetch_schedules())
   }, [dispatch])
 
-  const filteredSchedules = schedules.filter((schedule) => {
+  // Backend schedules mapping
+  const mappedSchedules = schedules.map((s: any) => ({
+    id: s._id,
+    title: s.title,
+    description: s.description,
+    trainer_name: s.createdBy, // You can fetch trainer info if needed
+    date: s.classDate,
+    start_time: s.startTime,
+    end_time: s.endTime,
+    status: s.status === "scheduled" && !s.isCancelled && !s.isCompleted ? "active"
+      : s.isCancelled ? "cancelled"
+      : s.isCompleted ? "completed"
+      : s.status,
+    capacity: s.maxTrainees,
+    booked: s.trainees?.length ?? 0,
+    isFull: s.isFull,
+    raw: s,
+  }))
+
+  const filteredSchedules = mappedSchedules.filter((schedule) => {
     const matchesSearch =
-      schedule.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      schedule.trainer_name.toLowerCase().includes(searchTerm.toLowerCase())
+      schedule.title.toLowerCase().includes(searchTerm.toLowerCase())
+      || (schedule.trainer_name?.toLowerCase?.()?.includes(searchTerm.toLowerCase()) ?? false)
     const matchesFilter = filterStatus === "all" || schedule.status === filterStatus
     return matchesSearch && matchesFilter
   })
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-      case "cancelled":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
-      case "completed":
-        return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
+      case "active": return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+      case "cancelled": return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300"
+      case "completed": return "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300"
+      default: return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300"
     }
   }
 
@@ -69,6 +213,32 @@ export default function AllSchedulePage() {
     if (percentage >= 70) return "text-amber-600"
     return "text-green-600"
   }
+
+  const [bookingScheduleId, setBookingScheduleId] = useState<string | null>(null)
+
+  // Open modal for booking
+  const openBookingModal = (scheduleId: string) => {
+    setBookingScheduleId(scheduleId)
+    setBookingModalOpen(true)
+  }
+  const closeBookingModal = () => {
+    setBookingScheduleId(null)
+    setBookingModalOpen(false)
+  }
+
+  // Message modal handler
+  const showMessage = (type: "success" | "error", text: string) => {
+    setMessageType(type)
+    setMessageText(text)
+    setMessageModalOpen(true)
+  }
+  const closeMessageModal = () => {
+    setMessageModalOpen(false)
+    setMessageText("")
+  }
+
+  // Find selected schedule for booking modal
+  const selectedSchedule = mappedSchedules.find(s => s.id === bookingScheduleId)
 
   return (
     <div className="min-h-screen py-8">
@@ -182,7 +352,9 @@ export default function AllSchedulePage() {
                       </div>
                       <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                         <Star className="h-4 w-4" />
-                        <span>Trainer: {schedule.trainer_name}</span>
+                        <span>
+                          Trainer: {schedule.trainer_name || "N/A"}
+                        </span>
                       </div>
                       <div className="flex items-center space-x-2 text-sm">
                         <Users className="h-4 w-4" />
@@ -193,8 +365,14 @@ export default function AllSchedulePage() {
                     </div>
 
                     {user?.role === "TRAINEE" && schedule.status === "active" && (
-                      <Button className="w-full" disabled={schedule.booked >= schedule.capacity}>
-                        {schedule.booked >= schedule.capacity ? "Fully Booked" : "Book Now"}
+                      <Button
+                        className="w-full"
+                        disabled={schedule.booked >= schedule.capacity || schedule.isFull}
+                        onClick={() => openBookingModal(schedule.id)}
+                      >
+                        {schedule.booked >= schedule.capacity || schedule.isFull
+                          ? "Fully Booked"
+                          : "Book Now"}
                       </Button>
                     )}
                   </CardContent>
@@ -203,6 +381,26 @@ export default function AllSchedulePage() {
             ))}
           </div>
         )}
+
+        {/* Booking Modal */}
+        {bookingModalOpen && selectedSchedule && user?.role === "TRAINEE" && (
+          <BookingModal
+            open={bookingModalOpen}
+            onClose={closeBookingModal}
+            scheduleId={selectedSchedule.id}
+            traineeId={user.id}
+            onBooked={() => dispatch(fetch_schedules())}
+            showMessage={showMessage}
+          />
+        )}
+
+        {/* Success/Error Message Modal */}
+        <MessageModal
+          open={messageModalOpen}
+          type={messageType}
+          message={messageText}
+          onClose={closeMessageModal}
+        />
 
         {/* Empty State */}
         {!is_loading && filteredSchedules.length === 0 && (
