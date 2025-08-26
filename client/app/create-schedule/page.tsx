@@ -202,7 +202,8 @@ export default function CreateSchedulePage() {
         
         })
       } else {
-        showMessage("success", result.message || "Failed to create schedule. Please try again.")
+        showMessage("success", result.message || "Failed to create schedule. Please try again.");
+        window.location.href = "/all-schedule"
       }
     } catch (error) {
       showMessage("error", "Failed to create schedule. Please try again.")
