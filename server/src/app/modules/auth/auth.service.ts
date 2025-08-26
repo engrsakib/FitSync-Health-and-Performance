@@ -1,6 +1,6 @@
 import AppError from "../../errorHelpers/appError";
 import { decodedToken } from "../../util/decodedToken";
-import { isActive, IUser } from "../user/user.interface";
+import { IsActive, IUser } from "../user/user.interface";
 import { User } from "../user/user.model";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -75,7 +75,7 @@ const getNewAccessToken = async (refreshToken: string) => {
     }
     if (user) {
       // Check if the user is active or not
-      if (user.isActive === isActive.BLOCKED) {
+      if (user.isActive === IsActive.BLOCKED) {
         throw new AppError("User is not active", 403);
       } else if (user.isDeleted) {
         throw new AppError("User is deleted", 403);
@@ -114,7 +114,7 @@ const resetPassword = async (oldPassword: string, newPassword: string, accessTok
   if (!user) {
     throw new AppError("User not found", 404);
   }
-  if (user.isActive === isActive.BLOCKED) {
+  if (user.isActive === IsActive.BLOCKED) {
     throw new AppError("User is not active", 403);
   } else if (user.isDeleted) {
     throw new AppError("User is deleted", 403);
