@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Octahedron, MeshDistortMaterial } from "@react-three/drei"
@@ -69,9 +70,10 @@ type BookingModalProps = {
   traineeId: string
   onBooked: () => void
   showMessage: (type: "success" | "error", message: string) => void
+  goToMyBooking: () => void
 }
 
-function BookingModal({ open, onClose, scheduleId, traineeId, onBooked, showMessage }: BookingModalProps) {
+function BookingModal({ open, onClose, scheduleId, traineeId, onBooked, showMessage, goToMyBooking }: BookingModalProps) {
   const [bookingDate, setBookingDate] = useState("")
   const [bookingTime, setBookingTime] = useState("")
   const [loading, setLoading] = useState(false)
@@ -110,6 +112,8 @@ function BookingModal({ open, onClose, scheduleId, traineeId, onBooked, showMess
         onBooked()
         onClose()
         showMessage("success", "Booking successful!")
+        // Redirect after a slight delay to let modal show
+        setTimeout(goToMyBooking, 1200)
       } else {
         setLoading(false)
         showMessage("error", result.message || "Booking failed!")
@@ -160,6 +164,7 @@ function getTraineeName(traineeId: string, users: any[]): string {
 }
 
 export default function AllSchedulePage() {
+  const router = useRouter()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterStatus, setFilterStatus] = useState("all")
   const [bookingModalOpen, setBookingModalOpen] = useState(false)
@@ -274,6 +279,11 @@ export default function AllSchedulePage() {
     } catch (e) {
       showMessage("error", "Cancel booking failed!")
     }
+  }
+
+  // Go to /my-booking after booking success
+  const goToMyBooking = () => {
+    router.push("/my-booking")
   }
 
   // Find selected schedule for booking modal
@@ -451,6 +461,7 @@ export default function AllSchedulePage() {
             traineeId={user.id}
             onBooked={() => dispatch(fetch_schedules())}
             showMessage={showMessage}
+            goToMyBooking={goToMyBooking}
           />
         )}
 
