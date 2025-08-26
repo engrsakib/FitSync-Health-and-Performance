@@ -29,7 +29,7 @@ const credentialsLogin = async (payload: Partial<IUser>) => {
     },
     process.env.JWT_SECRET as string,
     {
-      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) || 3600, // Default to 1 hour if not specified
+      expiresIn: Number(process.env.ACCESS_TOKEN_EXPIRES_IN) || 172800, // Default to 1 hour if not specified
     },
   );
   const refreshToken = jwt.sign(

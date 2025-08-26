@@ -67,11 +67,14 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }
+  const pass = process.env.NEXT_PUBLIC_LOGIN_PW;
+
+  // console.log(pass)
 
   const demoUsers = [
-    { email: "sakib@gamil.com", password: "1445uIoG@", role: "Admin" },
-    { email: "bushra@gmail.com", password: "1445uIoG@", role: "Trainer" },
-    { email: "humayra@gmail.com", password: "1445uIoG@", role: "Trainee" },
+    { email: "sakib@gamil.com", password: pass, role: "Admin" },
+    { email: "bushra@gmail.com", password: pass, role: "Trainer" },
+    { email: "humayra@gmail.com", password: pass, role: "Trainee" },
   ]
 
   const fillDemoCredentials = (email: string, password: string) => {
