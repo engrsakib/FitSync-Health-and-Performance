@@ -6,7 +6,8 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "preinstall": "npm install --legacy-peer-deps"
   },
   "dependencies": {
     "@emotion/is-prop-valid": "latest",
@@ -61,6 +62,7 @@
     "react-day-picker": "9.8.0",
     "react-dom": "^19",
     "react-hook-form": "^7.60.0",
+    "react-is": "^19.1.1",
     "react-native": "latest",
     "react-redux": "latest",
     "react-resizable-panels": "^2.1.7",

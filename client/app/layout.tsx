@@ -8,6 +8,7 @@ import { Footer } from "@/src/components/footer"
 import { SwitchUserModal } from "@/src/components/switch-user-modal"
 import { Toaster } from "@/components/ui/toaster"
 import { config } from "@/src/lib/config"
+import ProtectedRoute from "@/src/components/ProtectedRoute"
 
 const inter = Inter({
   subsets: ["latin"],
@@ -24,7 +25,7 @@ const playfair = Playfair_Display({
 export const metadata: Metadata = {
   title: config.app_name,
   description: config.app_description,
-    generator: 'v0.app'
+  generator: 'v0.app'
 }
 
 export default function RootLayout({
@@ -36,13 +37,15 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${playfair.variable}`}>
       <body className="min-h-screen bg-background font-sans antialiased">
         <Providers>
-          <div className="relative flex min-h-screen flex-col">
+          <ProtectedRoute>
             <Navbar />
-            <main className="flex-1">{children}</main>
+            <main className="flex-1 min-h-[80vh] flex flex-col justify-between">
+              {children}
+            </main>
             <Footer />
-          </div>
-          <SwitchUserModal />
-          <Toaster />
+            <SwitchUserModal />
+            <Toaster />
+          </ProtectedRoute>
         </Providers>
       </body>
     </html>

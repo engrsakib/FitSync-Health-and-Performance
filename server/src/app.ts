@@ -8,13 +8,16 @@ const app: Express = express();
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use(cors());
+app.use(cors({
+  origin: "http://localhost:3000", // ফ্রন্টএন্ডের ঠিকানা
+  credentials: true,               // cookie পাঠাতে হলে
+}));
 app.use(cookieParser());
 
 app.use("/api/v1", router);
 
 app.get("/", (req: Request, res: Response) => {
-  res.status(200).json("Welcome to the Tour Management System");
+  res.status(200).json("Welcome to the Gyms Management System");
 });
 
 app.use(globalErrorHandler);
