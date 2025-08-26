@@ -67,7 +67,7 @@ export default function LoginPage() {
       setIsLoading(false)
     }
   }
-  const pass = process.env.NEXT_PUBLIC_LOGIN_PW;
+  const pass : string = process.env.NEXT_PUBLIC_LOGIN_PW as string;
 
   // console.log(pass)
 

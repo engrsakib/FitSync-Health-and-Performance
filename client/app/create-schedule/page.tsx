@@ -1,20 +1,21 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { motion } from "framer-motion"
 import { Canvas } from "@react-three/fiber"
 import { OrbitControls, Cone, MeshDistortMaterial } from "@react-three/drei"
 import { Suspense } from "react"
-import { Calendar, Clock, Users, Plus, Save } from "lucide-react"
+import { Calendar, Clock, Users, Plus, Save, XCircle, CheckCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { useToast } from "@/hooks/use-toast"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
+import { useAppSelector } from "@/src/redux/store"
+import { config } from "@/src/lib/config"
 
 // 3D Animated Cone Component
 function AnimatedCone() {
@@ -33,28 +34,108 @@ function SceneLoader() {
   )
 }
 
+type TrainerType = {
+  _id: string
+  id: string
+  name: string
+}
+
+type MessageModalProps = {
+  open: boolean
+  type: "success" | "error"
+  message: string
+  onClose: () => void
+}
+
+function MessageModal({ open, type, message, onClose }: MessageModalProps) {
+  return (
+    <Dialog open={open} onOpenChange={onClose}>
+      <DialogContent className="max-w-xs mx-auto text-center">
+        <DialogHeader>
+          <DialogTitle className="flex flex-col items-center gap-2">
+            {type === "success" ? (
+              <CheckCircle className="w-10 h-10 text-green-600 mx-auto" />
+            ) : (
+              <XCircle className="w-10 h-10 text-red-600 mx-auto" />
+            )}
+            {type === "success" ? "Success!" : "Error"}
+          </DialogTitle>
+        </DialogHeader>
+        <div className="py-2 text-lg">{message}</div>
+        <Button onClick={onClose} variant={type === "success" ? "default" : "destructive"} className="w-full mt-2">
+          Close
+        </Button>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
 export default function CreateSchedulePage() {
-  const { toast } = useToast()
+  const { user } = useAppSelector((state) => state.auth)
   const [isLoading, setIsLoading] = useState(false)
+  const [trainers, setTrainers] = useState<TrainerType[]>([])
+  const [trainersLoading, setTrainersLoading] = useState(true)
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    trainer_id: "",
-    date: "",
-    start_time: "",
-    end_time: "",
-    capacity: "",
+    trainer: "",
+    classDate: "",
+    startTime: "",
+    endTime: "",
   })
 
-  // Mock trainers data - replace with actual API call
-  const mockTrainers = [
-    { id: "2", name: "Trainer User", specialty: ["Yoga", "HIIT"] },
-    { id: "6", name: "Sarah Johnson", specialty: ["Pilates", "Strength"] },
-    { id: "7", name: "Mike Wilson", specialty: ["CrossFit", "Cardio"] },
-  ]
+  // Success/Error Message Modal
+  const [messageModalOpen, setMessageModalOpen] = useState(false)
+  const [messageType, setMessageType] = useState<"success" | "error">("success")
+  const [messageText, setMessageText] = useState("")
+
+  // SSR hydration error fix: getMinDate without Date object in render
+  // Use useEffect to set minDate on mount
+  const [minDate, setMinDate] = useState("")
+  useEffect(() => {
+    setMinDate(new Date().toISOString().split("T")[0])
+  }, [])
+
+  // Fetch trainers from API (client-side only)
+  useEffect(() => {
+    async function fetchTrainers() {
+      setTrainersLoading(true)
+      try {
+        const token =
+          typeof window !== "undefined"
+            ? localStorage.getItem("acccessToken") ||
+              localStorage.getItem("access_token") ||
+              ""
+            : ""
+        const res = await fetch(`${config.api_base_url}/api/v1/users/role/TRAINER`, {
+          headers: { Authorization: `${token}` },
+        })
+        const result = await res.json()
+        if (res.ok && result.success !== false && Array.isArray(result.data)) {
+          setTrainers(result.data)
+        } else {
+          setTrainers([])
+        }
+      } catch {
+        setTrainers([])
+      }
+      setTrainersLoading(false)
+    }
+    fetchTrainers()
+  }, [])
 
   const handleInputChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const showMessage = (type: "success" | "error", text: string) => {
+    setMessageType(type)
+    setMessageText(text)
+    setMessageModalOpen(true)
+  }
+  const closeMessageModal = () => {
+    setMessageModalOpen(false)
+    setMessageText("")
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -64,71 +145,70 @@ export default function CreateSchedulePage() {
     // Validation
     if (
       !formData.title ||
-      !formData.trainer_id ||
-      !formData.date ||
-      !formData.start_time ||
-      !formData.end_time ||
-      !formData.capacity
+      !formData.trainer ||
+      !formData.classDate ||
+      !formData.startTime
     ) {
-      toast({
-        title: "Validation Error",
-        description: "Please fill in all required fields.",
-        variant: "destructive",
-      })
+      showMessage("error", "Please fill in all required fields.")
       setIsLoading(false)
       return
     }
 
-    if (new Date(`${formData.date}T${formData.start_time}`) >= new Date(`${formData.date}T${formData.end_time}`)) {
-      toast({
-        title: "Time Error",
-        description: "End time must be after start time.",
-        variant: "destructive",
-      })
+    if (
+      new Date(`${formData.classDate}T${formData.startTime}`) >=
+      new Date(`${formData.classDate}T${formData.endTime}`)
+    ) {
+      showMessage("error", "End time must be after start time.")
       setIsLoading(false)
       return
     }
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch(`${config.api_base_url}/schedules`, {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(formData)
-      // })
+      // Format data for API
+      const payload = {
+        title: formData.title,
+        description: formData.description,
+        trainer: formData.trainer,
+        classDate: new Date(formData.classDate).toISOString(),
+        startTime: formData.startTime,
+        createdBy: user?.id || user?._id || "",
+      }
 
-      // Mock success
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      toast({
-        title: "Schedule Created",
-        description: "The fitness schedule has been created successfully!",
+      // Send to backend
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("acccessToken") ||
+            localStorage.getItem("access_token") ||
+            ""
+          : ""
+      const response = await fetch(`${config.api_base_url}/api/v1/scheduling/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `${token}`,
+        },
+        body: JSON.stringify(payload),
       })
+      const result = await response.json()
 
-      // Reset form
-      setFormData({
-        title: "",
-        description: "",
-        trainer_id: "",
-        date: "",
-        start_time: "",
-        end_time: "",
-        capacity: "",
-      })
+      if (response.ok && result.success) {
+        showMessage("success", "The fitness schedule has been created successfully!")
+        setFormData({
+          title: "",
+          description: "",
+          trainer: "",
+          classDate: "",
+          startTime: "",
+        
+        })
+      } else {
+        showMessage("success", result.message || "Failed to create schedule. Please try again.")
+      }
     } catch (error) {
-      toast({
-        title: "Creation Failed",
-        description: "Failed to create schedule. Please try again.",
-        variant: "destructive",
-      })
+      showMessage("error", "Failed to create schedule. Please try again.")
     } finally {
       setIsLoading(false)
     }
-  }
-
-  const getMinDate = () => {
-    const today = new Date()
-    return today.toISOString().split("T")[0]
   }
 
   return (
@@ -242,21 +322,28 @@ export default function CreateSchedulePage() {
 
                   <div className="space-y-2">
                     <Label htmlFor="trainer">Trainer *</Label>
-                    <Select
-                      value={formData.trainer_id}
-                      onValueChange={(value) => handleInputChange("trainer_id", value)}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a trainer" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mockTrainers.map((trainer) => (
-                          <SelectItem key={trainer.id} value={trainer.id}>
-                            {trainer.name} - {trainer.specialty.join(", ")}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    {trainersLoading ? (
+                      <div className="flex items-center gap-2 text-muted-foreground py-2">
+                        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
+                        Loading trainers...
+                      </div>
+                    ) : (
+                      <Select
+                        value={formData.trainer}
+                        onValueChange={(value) => handleInputChange("trainer", value)}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a trainer" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {trainers.map((trainer) => (
+                            <SelectItem key={trainer._id || trainer.id} value={trainer._id || trainer.id}>
+                              {trainer.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
                   </div>
                 </div>
 
@@ -266,52 +353,38 @@ export default function CreateSchedulePage() {
 
                   <div className="grid md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="date">Date *</Label>
+                      <Label htmlFor="classDate">Date *</Label>
                       <Input
-                        id="date"
+                        id="classDate"
                         type="date"
-                        min={getMinDate()}
-                        value={formData.date}
-                        onChange={(e) => handleInputChange("date", e.target.value)}
+                        min={minDate}
+                        value={formData.classDate}
+                        onChange={(e) => handleInputChange("classDate", e.target.value)}
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="start_time">Start Time *</Label>
+                      <Label htmlFor="startTime">Start Time *</Label>
                       <Input
-                        id="start_time"
+                        id="startTime"
                         type="time"
-                        value={formData.start_time}
-                        onChange={(e) => handleInputChange("start_time", e.target.value)}
+                        value={formData.startTime}
+                        onChange={(e) => handleInputChange("startTime", e.target.value)}
                         required
                       />
                     </div>
 
-                    <div className="space-y-2">
-                      <Label htmlFor="end_time">End Time *</Label>
+                    {/* <div className="space-y-2">
+                      <Label htmlFor="endTime">End Time *</Label>
                       <Input
-                        id="end_time"
+                        id="endTime"
                         type="time"
-                        value={formData.end_time}
-                        onChange={(e) => handleInputChange("end_time", e.target.value)}
+                        value={formData.endTime}
+                        onChange={(e) => handleInputChange("endTime", e.target.value)}
                         required
                       />
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="capacity">Maximum Capacity *</Label>
-                    <Input
-                      id="capacity"
-                      type="number"
-                      min="1"
-                      max="100"
-                      placeholder="e.g., 20"
-                      value={formData.capacity}
-                      onChange={(e) => handleInputChange("capacity", e.target.value)}
-                      required
-                    />
+                    </div> */}
                   </div>
                 </div>
 
@@ -330,6 +403,12 @@ export default function CreateSchedulePage() {
             </CardContent>
           </Card>
         </motion.div>
+        <MessageModal
+          open={messageModalOpen}
+          type={messageType}
+          message={messageText}
+          onClose={closeMessageModal}
+        />
       </div>
     </div>
   )
