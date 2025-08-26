@@ -190,8 +190,8 @@ npm run dev
 
 ## Deployment
 
-- **Live Server:** [https://fit-sync-server.vercel.app](https://fit-sync-server.vercel.app) <!-- Replace with your actual deployed server URL -->
-- **Live Client:** [https://fit-sync-client.vercel.app](https://fit-sync-client.vercel.app) <!-- Replace with your actual deployed client URL -->
+- **Live Server:** [https://fitsyncserver.vercel.app](https://fitsyncserver.vercel.app) <!-- Replace with your actual deployed server URL -->
+- **Live Client:** [https://fitsyncclient.vercel.app/](https://fitsyncclient.vercel.app/) <!-- Replace with your actual deployed client URL -->
 
 ---
 
